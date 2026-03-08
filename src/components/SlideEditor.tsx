@@ -1,42 +1,75 @@
+import { Plus, Trash2 } from 'lucide-react';
 import type { SlideData } from '@/data/slides';
+import { cn } from '@/lib/utils';
 
 interface SlideEditorProps {
   slide: SlideData;
-  onChange: (updates: Partial<Pick<SlideData, 'title' | 'content'>>) => void;
+  onUpdateText: (objectId: string, text: string) => void;
+  onAddBody: () => void;
+  onDeleteObject: (objectId: string) => void;
 }
 
-export function SlideEditor({ slide, onChange }: SlideEditorProps) {
+const typeLabels: Record<string, string> = {
+  title: 'Title',
+  subtitle: 'Subtitle',
+  body: 'Body',
+};
+
+export function SlideEditor({ slide, onUpdateText, onAddBody, onDeleteObject }: SlideEditorProps) {
   return (
-    <div className="w-72 h-full bg-muted/30 border-l border-border p-4 flex flex-col gap-4 overflow-y-auto">
+    <div className="w-72 h-full bg-muted/30 border-l border-border p-4 flex flex-col gap-3 overflow-y-auto">
       <h2 className="text-sm font-semibold text-foreground">Edit Slide</h2>
-      
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="slide-title" className="text-xs font-medium text-muted-foreground">
-          Title
-        </label>
-        <input
-          id="slide-title"
-          type="text"
-          value={slide.title}
-          onChange={(e) => onChange({ title: e.target.value })}
-          className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground outline-none focus:ring-2 focus:ring-primary/50"
-        />
-      </div>
 
-      <div className="flex flex-col gap-1.5 flex-1">
-        <label htmlFor="slide-content" className="text-xs font-medium text-muted-foreground">
-          Content
-        </label>
-        <textarea
-          id="slide-content"
-          value={slide.content}
-          onChange={(e) => onChange({ content: e.target.value })}
-          className="w-full flex-1 min-h-[120px] px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-        />
-      </div>
+      {slide.objects.map((obj) => (
+        <div key={obj.id} className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-medium text-muted-foreground">
+              {typeLabels[obj.type] || obj.type}
+            </label>
+            {slide.objects.length > 1 && (
+              <button
+                onClick={() => onDeleteObject(obj.id)}
+                title="Remove"
+                className="text-muted-foreground hover:text-destructive transition-colors"
+              >
+                <Trash2 className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+          {obj.type === 'title' ? (
+            <input
+              type="text"
+              value={obj.text}
+              onChange={(e) => onUpdateText(obj.id, e.target.value)}
+              placeholder="Slide title"
+              className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground outline-none focus:ring-2 focus:ring-primary/50"
+            />
+          ) : (
+            <textarea
+              value={obj.text}
+              onChange={(e) => onUpdateText(obj.id, e.target.value)}
+              placeholder={`${typeLabels[obj.type] || 'Text'}...`}
+              rows={3}
+              className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+            />
+          )}
+        </div>
+      ))}
 
-      <p className="text-xs text-muted-foreground">
-        Changes save automatically. The sidebar and preview update in real time.
+      <button
+        onClick={onAddBody}
+        className={cn(
+          'flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg transition-colors',
+          'border border-dashed border-border text-muted-foreground',
+          'hover:border-primary hover:text-primary'
+        )}
+      >
+        <Plus className="w-3.5 h-3.5" />
+        Add Body Text
+      </button>
+
+      <p className="text-xs text-muted-foreground mt-auto">
+        Changes update the preview in real time.
       </p>
     </div>
   );
