@@ -270,7 +270,16 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
     const { slides, currentIndex } = get();
     const slide = slides[currentIndex];
     if (!slide) return;
-    const newObj = createObject('shape', '', { shapeType, x: 300 + Math.random() * 100, y: 180 + Math.random() * 80 });
+    const newObj = createObject('shape', '', {
+      shapeType,
+      x: 380,
+      y: 195,
+      width: 200,
+      height: 150,
+      fill: '#60A5FA',
+      stroke: '#1E40AF',
+      strokeWidth: 2,
+    });
     set((state) => ({
       slides: state.slides.map((s) =>
         s.id === slide.id ? { ...s, objects: [...s.objects, newObj] } : s
