@@ -1,6 +1,6 @@
 export interface SlideObject {
   id: string;
-  type: 'title' | 'subtitle' | 'body';
+  type: 'title' | 'subtitle' | 'body' | 'shape';
   text: string;
   x: number;
   y: number;
@@ -10,6 +10,11 @@ export interface SlideObject {
   fontFamily?: string;
   align?: 'left' | 'center' | 'right';
   color?: string;
+  // Shape-specific
+  shapeType?: 'rectangle' | 'circle';
+  fill?: string;
+  stroke?: string;
+  strokeWidth?: number;
 }
 
 export interface SlideData {
@@ -18,19 +23,17 @@ export interface SlideData {
   objects: SlideObject[];
 }
 
-/** Helper to get the first title object's text for sidebar display */
 export function getSlideName(slide: SlideData): string {
   return slide.name || slide.objects.find((o) => o.type === 'title')?.text || 'Untitled';
 }
 
-/** Defaults per object type */
 const defaults: Record<string, Partial<SlideObject>> = {
   title: { x: 60, y: 40, width: 840, height: 80, fontSize: 44, align: 'center' },
   subtitle: { x: 60, y: 130, width: 840, height: 50, fontSize: 28, align: 'center' },
   body: { x: 60, y: 200, width: 840, height: 260, fontSize: 22, align: 'left' },
+  shape: { x: 200, y: 200, width: 200, height: 150, fill: '#3b82f6', stroke: '#1e40af', strokeWidth: 2 },
 };
 
-/** Create a SlideObject with sensible defaults */
 export function createObject(
   type: SlideObject['type'],
   text: string,
@@ -47,6 +50,9 @@ export function createObject(
     height: d.height!,
     fontSize: d.fontSize,
     align: d.align as SlideObject['align'],
+    fill: d.fill,
+    stroke: d.stroke,
+    strokeWidth: d.strokeWidth,
     ...overrides,
   };
 }
