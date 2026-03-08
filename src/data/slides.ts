@@ -57,7 +57,7 @@ const defaults: Record<string, Partial<SlideObject>> = {
   title: { x: 60, y: 40, width: 840, height: 80, fontSize: 44, align: 'center' },
   subtitle: { x: 60, y: 130, width: 840, height: 50, fontSize: 28, align: 'center' },
   body: { x: 60, y: 200, width: 840, height: 260, fontSize: 22, align: 'left' },
-  shape: { x: 200, y: 200, width: 200, height: 150, fill: '#3b82f6', stroke: '#1e40af', strokeWidth: 2 },
+  shape: { x: 380, y: 195, width: 200, height: 150, fill: '#60A5FA', stroke: '#1E40AF', strokeWidth: 2 },
 };
 
 export function createObject(

@@ -51,7 +51,7 @@ interface SlidesState {
   setObjectPosition: (slideId: string, objectId: string, x: number, y: number) => void;
   addBodyObject: (slideId: string) => void;
   addTextBox: (slideId: string) => void;
-  addShape: (shapeType: 'rectangle' | 'circle') => void;
+  addShape: (shapeType: import('@/data/slides').ShapeType) => void;
   deleteObject: (slideId: string, objectId: string) => void;
 
   newPresentation: (name: string) => void;
