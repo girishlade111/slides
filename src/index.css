@@ -1,5 +1,5 @@
-/* IBM Plex for clean enterprise typography - inspired by Carbon Design System */
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+/* Inter for clean modern typography - Lade Slides Design System */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,37 +8,40 @@
 @layer base {
   :root {
     /* 
-     * Design System: Inspired by IBM Carbon
-     * Clean, accessible, enterprise-grade tokens
+     * Design System: Lade Slides / Lade Stack
+     * Teal + Gold branding, clean and modern
      */
     
-    /* === Brand Colors (Slide Deck) === */
-    /* Primary - Deep blue for authority and trust */
-    --slide-primary: 215 100% 20%;      /* #003366 - Deep Navy */
-    --slide-primary-light: 215 85% 35%; /* #1a5490 */
+    /* === Brand Colors === */
+    --slide-primary: 174 80% 41%;        /* #20B2AA - Teal */
+    --slide-primary-light: 174 60% 55%;
     
-    /* Accent - Vibrant blue for highlights */
-    --slide-accent: 207 90% 54%;        /* #2196F3 - Bright Blue */
-    --slide-accent-light: 207 90% 70%;  /* Lighter accent */
-    --slide-accent-muted: 207 40% 90%;  /* Very light accent bg */
+    --slide-accent: 51 100% 50%;         /* #FFD700 - Gold */
+    --slide-accent-light: 51 100% 65%;
+    --slide-accent-muted: 51 60% 92%;
     
     /* Semantic */
-    --slide-success: 145 63% 42%;       /* #27AE60 - Green */
-    --slide-warning: 36 100% 50%;       /* #F39C12 - Amber */
-    --slide-error: 4 90% 58%;           /* #E74C3C - Red */
+    --slide-success: 160 84% 39%;
+    --slide-warning: 38 92% 50%;
+    --slide-error: 0 84% 60%;
     
-    /* Neutrals - Gray scale for text and backgrounds */
-    --slide-gray-100: 220 14% 96%;      /* #F4F5F7 */
-    --slide-gray-200: 220 13% 91%;      /* #E5E7EB */
-    --slide-gray-300: 216 12% 84%;      /* #D1D5DB */
-    --slide-gray-400: 218 11% 65%;      /* #9CA3AF */
-    --slide-gray-500: 220 9% 46%;       /* #6B7280 */
-    --slide-gray-600: 215 14% 34%;      /* #4B5563 */
-    --slide-gray-700: 217 19% 27%;      /* #374151 */
-    --slide-gray-800: 215 28% 17%;      /* #1F2937 */
-    --slide-gray-900: 221 39% 11%;      /* #111827 */
+    /* Neutrals */
+    --slide-gray-100: 0 0% 96%;
+    --slide-gray-200: 220 13% 91%;
+    --slide-gray-300: 216 12% 84%;
+    --slide-gray-400: 218 11% 65%;
+    --slide-gray-500: 220 9% 46%;
+    --slide-gray-600: 215 14% 34%;
+    --slide-gray-700: 217 19% 27%;
+    --slide-gray-800: 215 25% 17%;
+    --slide-gray-900: 221 39% 11%;
     
-    /* === Legacy MS Tokens (for backwards compatibility) === */
+    /* === Lade Brand Tokens === */
+    --lade-teal: 174 80% 41%;
+    --lade-gold: 51 100% 50%;
+    --lade-blue: 217 91% 60%;
+    
+    /* Legacy MS tokens */
     --ms-blue: 207 90% 54%;
     --ms-navy: 215 100% 20%;
     --ms-navy-80: 215 40% 40%;
@@ -55,68 +58,68 @@
     --card-foreground: 221 39% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 221 39% 11%;
-    --primary: 207 90% 54%;
+    --primary: 174 80% 41%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 14% 96%;
+    --secondary: 0 0% 96%;
     --secondary-foreground: 221 39% 11%;
-    --muted: 220 14% 96%;
+    --muted: 0 0% 96%;
     --muted-foreground: 220 9% 46%;
-    --accent: 207 50% 92%;
-    --accent-foreground: 215 100% 20%;
-    --destructive: 4 90% 58%;
+    --accent: 174 40% 92%;
+    --accent-foreground: 174 80% 25%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 207 90% 54%;
+    --ring: 174 80% 41%;
     --radius: 0.375rem;
     
     /* Sidebar */
-    --sidebar-background: 215 100% 20%;
+    --sidebar-background: 174 80% 25%;
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 207 90% 54%;
+    --sidebar-primary: 174 80% 41%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 60% 30%;
+    --sidebar-accent: 174 60% 30%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 215 50% 25%;
-    --sidebar-ring: 207 90% 54%;
+    --sidebar-border: 174 50% 20%;
+    --sidebar-ring: 174 80% 41%;
     
     /* Canvas */
-    --canvas-bg: 220 14% 96%;
+    --canvas-bg: 0 0% 96%;
     --slide-bg: 0 0% 100%;
     --grid-line: 220 13% 91%;
-    --comment-pin: 36 100% 50%;
-    --comment-pin-resolved: 145 63% 42%;
+    --comment-pin: 38 92% 50%;
+    --comment-pin-resolved: 160 84% 39%;
   }
 
   .dark {
     --background: 221 39% 11%;
-    --foreground: 220 14% 96%;
+    --foreground: 0 0% 96%;
     --card: 215 28% 17%;
-    --card-foreground: 220 14% 96%;
+    --card-foreground: 0 0% 96%;
     --popover: 215 28% 17%;
-    --popover-foreground: 220 14% 96%;
-    --primary: 207 90% 60%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 174 80% 50%;
     --primary-foreground: 0 0% 100%;
     --secondary: 217 19% 27%;
-    --secondary-foreground: 220 14% 96%;
+    --secondary-foreground: 0 0% 96%;
     --muted: 217 19% 27%;
     --muted-foreground: 218 11% 65%;
-    --accent: 215 60% 30%;
-    --accent-foreground: 220 14% 96%;
-    --destructive: 4 70% 50%;
+    --accent: 174 40% 20%;
+    --accent-foreground: 0 0% 96%;
+    --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
     --border: 217 19% 27%;
     --input: 217 19% 27%;
-    --ring: 207 90% 60%;
+    --ring: 174 80% 50%;
     
     --sidebar-background: 221 39% 8%;
-    --sidebar-foreground: 220 14% 96%;
-    --sidebar-primary: 207 90% 60%;
+    --sidebar-foreground: 0 0% 96%;
+    --sidebar-primary: 174 80% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 217 19% 22%;
-    --sidebar-accent-foreground: 220 14% 96%;
+    --sidebar-accent-foreground: 0 0% 96%;
     --sidebar-border: 217 19% 18%;
-    --sidebar-ring: 207 90% 60%;
+    --sidebar-ring: 174 80% 50%;
     
     --canvas-bg: 221 39% 8%;
     --slide-bg: 215 28% 17%;
@@ -131,19 +134,17 @@
   
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
-/* === Typography utilities (legacy - Tailwind fontSize now handles this) === */
+/* === Typography utilities === */
 @layer components {
-  /* Metric - Large numbers with tabular figures */
   .type-metric {
     @apply text-5xl font-semibold tabular-nums;
   }
   
-  /* Code/Mono */
   .type-mono {
     font-family: 'IBM Plex Mono', 'JetBrains Mono', monospace;
   }
@@ -151,7 +152,6 @@
 
 /* === Slide-specific utilities === */
 @layer components {
-  /* Card styles */
   .slide-card {
     @apply p-6 rounded-lg bg-white border border-slide-gray-200;
   }
@@ -164,20 +164,17 @@
     @apply slide-card border-l-4 border-l-slide-accent;
   }
   
-  /* Metric card */
   .slide-metric-card {
     @apply p-6 rounded-lg;
     background: hsl(var(--slide-accent-muted));
   }
   
-  /* Badge */
   .slide-badge {
     @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium;
     background: hsl(var(--slide-accent-muted));
     color: hsl(var(--slide-primary));
   }
   
-  /* Divider */
   .slide-divider {
     @apply w-16 h-1 rounded-full;
     background: hsl(var(--slide-accent));
@@ -208,12 +205,7 @@
   background: hsl(var(--slide-bg));
 }
 
-/* === Slide Font Scaling (1.25x scale, 20px floor) ===
-   Applied only within slide content, not app UI */
-.slide-content {
-  /* Scale up all text proportionally for 1920x1080 projection */
-}
-
+/* === Slide Font Scaling === */
 .slide-content .text-xs { font-size: 20px !important; line-height: 1.5 !important; }
 .slide-content .text-sm { font-size: 20px !important; line-height: 1.5 !important; }
 .slide-content .text-base { font-size: 20px !important; line-height: 1.6 !important; }
@@ -236,7 +228,7 @@
   background-size: calc(100% / 6) calc(100% / 6);
 }
 
-/* Slide thumbnail hover effect */
+/* Slide thumbnail hover */
 .slide-thumbnail {
   @apply transition-all duration-200;
 }
@@ -251,13 +243,9 @@
 
 /* Comment pin styles */
 .comment-pin {
-  @apply w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold cursor-pointer transition-transform;
+  @apply w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold cursor-pointer;
   background: hsl(var(--comment-pin));
   color: white;
-}
-
-.comment-pin:hover {
-  @apply scale-110;
 }
 
 .comment-pin.resolved {
@@ -271,50 +259,15 @@
 }
 
 @keyframes slideUp {
-  from { 
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to { 
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes scaleIn {
-  from { 
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to { 
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
-@keyframes collapseIn {
-  from {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-20px) scale(0.8);
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out;
-}
-
-.animate-slide-up {
-  animation: slideUp 0.4s ease-out;
-}
-
-.animate-scale-in {
-  animation: scaleIn 0.2s ease-out;
-}
-
-.animate-collapse {
-  animation: collapseIn 0.2s ease-out forwards;
-}
+.animate-fade-in { animation: fadeIn 0.3s ease-out; }
+.animate-slide-up { animation: slideUp 0.4s ease-out; }
+.animate-scale-in { animation: scaleIn 0.2s ease-out; }

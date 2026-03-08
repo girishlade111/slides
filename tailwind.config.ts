@@ -19,11 +19,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        // IBM Plex - Clean enterprise typography (Carbon Design System)
-        sans: ['"IBM Plex Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        sans: ['"Inter"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
         mono: ['"IBM Plex Mono"', '"JetBrains Mono"', 'monospace'],
-        // Legacy alias
-        ms: ['"IBM Plex Sans"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        ms: ['"Inter"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
       },
       // Slide-specific font scale (applied via .slide-content class in CSS)
       // Keep Tailwind defaults for app UI, override only in slide contexts
