@@ -343,7 +343,7 @@ export function KonvaSlideCanvas({ slide, width, height, snapToGrid = true }: Ko
         offsetX={-(width / scale - CANVAS_WIDTH) / 2}
         offsetY={-(height / scale - CANVAS_HEIGHT) / 2}
         onClick={handleStageClick}
-        onTap={handleStageClick}
+        onTap={() => clearSelection()}
       >
         {/* Background layer */}
         <Layer>
