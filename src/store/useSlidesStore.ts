@@ -337,6 +337,24 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
     }));
   },
 
+  updateSlideBackground: (slideId, bg) => {
+    set((state) => ({
+      slides: state.slides.map((s) => (s.id === slideId ? { ...s, background: bg } : s)),
+    }));
+  },
+
+  applyBackgroundToAll: (bg) => {
+    set((state) => ({
+      slides: state.slides.map((s) => ({ ...s, background: bg })),
+    }));
+  },
+
+  resetSlideBackground: (slideId) => {
+    set((state) => ({
+      slides: state.slides.map((s) => (s.id === slideId ? { ...s, background: undefined } : s)),
+    }));
+  },
+
   // ── Presentation management ──
 
   newPresentation: (name) => {
