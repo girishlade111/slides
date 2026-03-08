@@ -10,7 +10,7 @@ import { PresentationMode } from '@/components/slides/PresentationMode';
 import { PresenterView } from '@/components/slides/PresenterView';
 import { PresenterNotesPanel } from '@/components/slides/PresenterNotesPanel';
 import { DynamicSlideRenderer } from '@/components/slides/DynamicSlideRenderer';
-import { KonvaSlideCanvas } from '@/components/slides/KonvaSlideCanvas';
+import { InteractiveSlideEditor } from '@/components/slides/InteractiveSlideEditor';
 import { usePresentationStore } from '@/store/presentationStore';
 import { showcaseSlides } from '@/slides/showcase';
 import { toast } from '@/hooks/use-toast';
