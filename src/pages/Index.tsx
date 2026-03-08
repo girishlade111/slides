@@ -231,12 +231,11 @@ export default function Index() {
                 {ShowcaseContent}
               </SlideCanvas>
             ) : (
-              <div ref={canvasContainerRef} className="flex-1 h-full bg-[#e8e8e8] relative">
+              <div ref={canvasContainerRef} className="flex-1 h-full bg-[#e8e8e8] relative overflow-auto flex items-center justify-center">
                 {currentSlide && (
-                  <KonvaSlideCanvas
+                  <InteractiveSlideEditor
                     slide={currentSlide}
-                    width={canvasSize.width}
-                    height={canvasSize.height}
+                    scale={canvasSize.width / 1920}
                   />
                 )}
               </div>
