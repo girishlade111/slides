@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronsLeft, ChevronsRight } from 'lucide-react';
-import { Sidebar } from '@/components/layout/Sidebar';
-import { Toolbar } from '@/components/layout/Toolbar';
+import { PPTTitleBar } from '@/components/layout/PPTTitleBar';
+import { PPTRibbon } from '@/components/layout/PPTRibbon';
+import { PPTSidebar } from '@/components/layout/PPTSidebar';
+import { PPTStatusBar } from '@/components/layout/PPTStatusBar';
 import { SlideCanvas } from '@/components/slides/SlideCanvas';
 import { SlideOverviewGrid } from '@/components/slides/SlideOverviewGrid';
 import { PresentationMode } from '@/components/slides/PresentationMode';
 import { PresenterView } from '@/components/slides/PresenterView';
 import { PresenterNotesPanel } from '@/components/slides/PresenterNotesPanel';
-import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { showcaseSlides } from '@/slides/showcase';
 
 interface SlideData {
@@ -28,11 +27,10 @@ export default function Index() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isPresentationMode, setIsPresentationMode] = useState(false);
   const [isPresenterView, setIsPresenterView] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(256);
+  const [sidebarWidth, setSidebarWidth] = useState(220);
   const [isResizing, setIsResizing] = useState(false);
-  
-  // Derive slides from showcaseSlides with deterministic IDs (for presenter notes persistence)
-  const slides = React.useMemo<SlideData[]>(() => 
+
+  const slides = React.useMemo<SlideData[]>(() =>
     showcaseSlides.map((s) => ({
       id: `slide-${s.name.toLowerCase().replace(/\s+/g, '-')}`,
       component: s.component,
@@ -43,10 +41,8 @@ export default function Index() {
     []
   );
 
-  // Get current slide ID for presenter notes
   const currentSlideId = slides[activeSlideIndex]?.id ?? null;
 
-  // Toggle dark mode
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDarkMode);
   }, [isDarkMode]);
@@ -54,10 +50,7 @@ export default function Index() {
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return;
-      }
-
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (isPresentationMode || isPresenterView) return;
 
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
@@ -72,15 +65,15 @@ export default function Index() {
       } else if (e.key === 'N' && e.shiftKey && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
         setShowNotes(prev => !prev);
-      } else if (e.key === 'S' && e.shiftKey && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault();
-        setShowSidebar(prev => !prev);
       } else if (e.key === 'P' && e.shiftKey && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
         setIsPresentationMode(true);
       } else if (e.key === 'V' && e.shiftKey && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
         setIsPresenterView(true);
+      } else if (e.key === 'F5') {
+        e.preventDefault();
+        setIsPresentationMode(true);
       }
     };
 
@@ -88,13 +81,15 @@ export default function Index() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [slides.length, isPresentationMode, isPresenterView]);
 
-
   const ActiveSlideComponent = slides[activeSlideIndex]?.component || showcaseSlides[0].component;
 
   return (
-    <div className="h-screen flex flex-col bg-background">
-      {/* Toolbar */}
-      <Toolbar
+    <div className="h-screen flex flex-col bg-[#f3f3f3] overflow-hidden">
+      {/* Title bar */}
+      <PPTTitleBar fileName="Presentation1" />
+
+      {/* Ribbon */}
+      <PPTRibbon
         showGrid={showGrid}
         onToggleGrid={() => {
           const newShowGrid = !showGrid;
@@ -109,58 +104,26 @@ export default function Index() {
         onStartPresenterView={() => setIsPresenterView(true)}
       />
 
-      <div className="flex-1 flex overflow-hidden relative">
-        {/* Left Sidebar - always rendered, clipped when hidden */}
-        <div 
-          className="flex-shrink-0 overflow-hidden z-50 h-full"
-          style={{ 
-            width: showSidebar ? sidebarWidth : 0,
-            transition: isResizing ? 'none' : 'width 200ms ease-out',
-          }}
-        >
-          <div className="h-full" style={{ width: sidebarWidth }}>
-            <Sidebar
-              slides={slides.map((slide) => ({
-                id: slide.id,
-                content: <slide.component />,
-              }))}
-              activeSlideIndex={activeSlideIndex}
-              onSlideClick={setActiveSlideIndex}
-              width={sidebarWidth}
-              onWidthChange={setSidebarWidth}
-              onResizeStart={() => setIsResizing(true)}
-              onResizeEnd={() => setIsResizing(false)}
-              onSnapClose={() => setShowSidebar(false)}
-            />
-          </div>
-        </div>
+      {/* Main content area */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Sidebar */}
+        {showSidebar && (
+          <PPTSidebar
+            slides={slides.map((slide) => ({
+              id: slide.id,
+              content: <slide.component />,
+            }))}
+            activeSlideIndex={activeSlideIndex}
+            onSlideClick={setActiveSlideIndex}
+            width={sidebarWidth}
+            onWidthChange={setSidebarWidth}
+            onResizeStart={() => setIsResizing(true)}
+            onResizeEnd={() => setIsResizing(false)}
+            onSnapClose={() => setShowSidebar(false)}
+          />
+        )}
 
-        {/* Sidebar Toggle - morphed tab shape at sidebar edge */}
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                onClick={() => setShowSidebar(!showSidebar)}
-                className="absolute top-1.5 z-40 h-8 w-6 flex items-center justify-center bg-background border border-l-0 rounded-r-full shadow-sm hover:bg-muted"
-                style={{ 
-                  left: showSidebar ? sidebarWidth - 5 : -4,
-                  transition: isResizing ? 'none' : 'left 200ms ease-out, background-color 150ms'
-                }}
-              >
-                {showSidebar ? (
-                  <ChevronsLeft className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <ChevronsRight className="h-4 w-4 text-muted-foreground" />
-                )}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              {showSidebar ? 'Hide Sidebar' : 'Show Sidebar'} (⇧S)
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-
-        {/* Main Canvas Area */}
+        {/* Canvas area */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 relative overflow-hidden">
             <SlideCanvas
@@ -186,7 +149,7 @@ export default function Index() {
             )}
           </div>
 
-          {/* Presenter Notes Panel - Bottom */}
+          {/* Presenter Notes Panel */}
           {showNotes && (
             <PresenterNotesPanel
               slideId={currentSlideId}
@@ -196,6 +159,19 @@ export default function Index() {
           )}
         </div>
       </div>
+
+      {/* Status bar */}
+      <PPTStatusBar
+        currentSlide={activeSlideIndex + 1}
+        totalSlides={slides.length}
+        zoom={zoom}
+        onZoomChange={setZoom}
+        showNotes={showNotes}
+        onToggleNotes={() => setShowNotes(!showNotes)}
+        onStartPresentation={() => setIsPresentationMode(true)}
+        showGrid={showGrid}
+        onToggleGrid={() => setShowGrid(!showGrid)}
+      />
 
       {/* Presentation Mode */}
       {isPresentationMode && (
@@ -212,7 +188,7 @@ export default function Index() {
         />
       )}
 
-      {/* Presenter View (dual-window mode) */}
+      {/* Presenter View */}
       {isPresenterView && (
         <PresenterView
           slides={slides.map(slide => ({
