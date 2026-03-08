@@ -33,8 +33,8 @@ interface SlidesState {
 }
 
 export const useSlidesStore = create<SlidesState>((set, get) => ({
-  slides: initialSlides,
-  currentIndex: 0,
+  slides: stored?.slides ?? initialSlides,
+  currentIndex: stored?.currentIndex ?? 0,
   selectedObjectId: null,
 
   setCurrentIndex: (index) => set({ currentIndex: index, selectedObjectId: null }),
