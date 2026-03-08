@@ -1,4 +1,4 @@
-import type { SlideObject, ImageFilters, ShadowConfig, ImageBorder, defaultImageFilters } from '@/data/slides';
+import type { SlideObject, ImageFilters, ShadowConfig, ImageBorder } from '@/data/slides';
 import { useSlidesStore } from '@/store/useSlidesStore';
 import { cn } from '@/lib/utils';
 import { FlipHorizontal, FlipVertical, RotateCcw, RotateCw, Replace, Trash2 } from 'lucide-react';
