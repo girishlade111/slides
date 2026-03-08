@@ -10,7 +10,7 @@ import { PresentationMode } from '@/components/slides/PresentationMode';
 import { PresenterView } from '@/components/slides/PresenterView';
 import { PresenterNotesPanel } from '@/components/slides/PresenterNotesPanel';
 import { DynamicSlideRenderer } from '@/components/slides/DynamicSlideRenderer';
-import { KonvaSlideCanvas } from '@/components/slides/KonvaSlideCanvas';
+import { InteractiveSlideEditor } from '@/components/slides/InteractiveSlideEditor';
 import { usePresentationStore } from '@/store/presentationStore';
 import { showcaseSlides } from '@/slides/showcase';
 import { toast } from '@/hooks/use-toast';
@@ -231,12 +231,11 @@ export default function Index() {
                 {ShowcaseContent}
               </SlideCanvas>
             ) : (
-              <div ref={canvasContainerRef} className="flex-1 h-full bg-[#e8e8e8] relative">
+              <div ref={canvasContainerRef} className="flex-1 h-full bg-[#e8e8e8] relative overflow-auto flex items-center justify-center">
                 {currentSlide && (
-                  <KonvaSlideCanvas
+                  <InteractiveSlideEditor
                     slide={currentSlide}
-                    width={canvasSize.width}
-                    height={canvasSize.height}
+                    scale={canvasSize.width / 1920}
                   />
                 )}
               </div>
