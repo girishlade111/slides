@@ -1,5 +1,5 @@
 import PptxGenJS from 'pptxgenjs';
-import type { Presentation, SlideObject, ShapeProperties } from '@/store/types';
+import type { Presentation, ShapeProperties } from '@/store/types';
 
 const PX_TO_INCHES = 1 / 96;
 
