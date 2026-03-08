@@ -205,6 +205,7 @@ export default function Index() {
       <OpenPresentationDialog open={showOpen} onOpenChange={setShowOpen} />
       <SaveAsDialog open={showSaveAs} onOpenChange={setShowSaveAs} />
       <PresentationSettingsDialog open={showSettings} onOpenChange={setShowSettings} />
+      <SlideBackgroundEditor open={showBgEditor} onClose={() => setShowBgEditor(false)} />
     </div>
   );
 }
