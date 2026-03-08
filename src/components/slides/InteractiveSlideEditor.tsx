@@ -311,7 +311,7 @@ export const InteractiveSlideEditor = React.memo(function InteractiveSlideEditor
       )}
     </div>
   );
-}
+});
 
 /** Renders object content based on type */
 function ObjectRenderer({ obj, isEditing, slideId, onStopEditing }: {

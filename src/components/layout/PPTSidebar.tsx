@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { FixedSizeList as List } from 'react-window';
+import { FixedSizeList as VirtualList } from 'react-window';
 import { Plus, Copy, Trash2, MoreHorizontal } from 'lucide-react';
 import {
   DropdownMenu,
