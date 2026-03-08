@@ -509,10 +509,57 @@ function ViewRibbon({ showGrid, onToggleGrid, showNotes, onToggleNotes, isDarkMo
 
 function FileRibbon() {
   const store = usePresentationStore();
+  const [exporting, setExporting] = React.useState(false);
+
+  const handleExportPDF = React.useCallback(async () => {
+    if (exporting) return;
+    setExporting(true);
+    toast({ title: 'Exporting PDF…', description: 'Rendering slides, please wait.' });
+
+    try {
+      const { exportToPDF, createOffscreenSlideContainer, removeOffscreenContainer } = await import('@/lib/exportPDF');
+      const { createRoot } = await import('react-dom/client');
+      const { DynamicSlideRenderer } = await import('@/components/slides/DynamicSlideRenderer');
+      const { flushSync } = await import('react-dom');
+
+      const presentation = store.presentation;
+      const container = createOffscreenSlideContainer();
+
+      await exportToPDF(presentation, (index) => {
+        const slide = presentation.slides[index];
+        if (!slide) return null;
+
+        // Clear and render slide into off-screen container
+        container.innerHTML = '';
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'width:1920px;height:1080px;position:relative;';
+        container.appendChild(wrapper);
+
+        const root = createRoot(wrapper);
+        flushSync(() => {
+          root.render(React.createElement(DynamicSlideRenderer, { slide }));
+        });
+
+        // Small delay isn't needed with flushSync
+        return wrapper;
+      }, (current, total) => {
+        toast({ title: `Exporting slide ${current}/${total}…` });
+      });
+
+      removeOffscreenContainer(container);
+      toast({ title: 'PDF exported!', description: `${presentation.name}.pdf downloaded.` });
+    } catch (err) {
+      console.error('PDF export failed:', err);
+      toast({ title: 'Export failed', description: String(err), variant: 'destructive' });
+    } finally {
+      setExporting(false);
+    }
+  }, [exporting, store.presentation]);
+
   const items = [
     { label: 'New', desc: 'Create a new presentation', action: () => { store.newPresentation(); toast({ title: 'New presentation created' }); } },
     { label: 'Save', desc: 'Save current presentation', action: () => { store.saveToLocalStorage(); toast({ title: 'Saved' }); } },
-    { label: 'Export as PDF', desc: 'Download as PDF file', action: () => toast({ title: 'Coming soon', description: 'PDF export is in development.' }) },
+    { label: exporting ? 'Exporting…' : 'Export as PDF', desc: 'Download as PDF file', action: handleExportPDF },
     { label: 'Export as PPTX', desc: 'Download as PowerPoint', action: () => toast({ title: 'Coming soon', description: 'PPTX export is in development.' }) },
   ];
   return (
