@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
-import { Stage, Layer, Rect, Text, Image as KonvaImage, Circle, Line, RegularPolygon, Star, Arrow, Group, Transformer } from 'react-konva';
+import { Stage, Layer, Rect, Text, Image as KonvaImage, Circle, Line, RegularPolygon, Star, Arrow, Transformer } from 'react-konva';
 import Konva from 'konva';
 import type { Slide, SlideObject, TextProperties, ShapeProperties, ImageProperties } from '@/store/types';
 import { usePresentationStore } from '@/store/presentationStore';
