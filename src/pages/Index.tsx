@@ -35,6 +35,10 @@ export default function Index() {
     });
   }, []);
 
+  const handleUpdateSlide = useCallback((updates: Partial<Pick<SlideData, 'title' | 'content'>>) => {
+    setSlides((prev) => prev.map((s, i) => i === currentIndex ? { ...s, ...updates } : s));
+  }, [currentIndex]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight') handleNext();
@@ -56,7 +60,7 @@ export default function Index() {
       <div className="flex-1 flex flex-col">
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="w-full max-w-3xl bg-card rounded-2xl shadow-lg border border-border flex flex-col overflow-hidden">
-            <SlideView slide={currentSlide} />
+            <SlideView slide={currentSlide} onUpdate={handleUpdateSlide} />
 
             <div className="flex items-center justify-between px-8 py-5 border-t border-border bg-muted/30">
               <button
