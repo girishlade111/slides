@@ -196,7 +196,6 @@ export function KonvaSlideCanvas({ slide, width, height, snapToGrid = true }: Ko
     }
 
     if (properties.type === 'image') {
-      const ip = properties as ImageProperties;
       const img = loadedImages[obj.id];
       if (!img) return <Rect key={obj.id} {...commonProps} fill="#f0f0f0" stroke="#ccc" strokeWidth={1} />;
       return (
