@@ -35,6 +35,10 @@ export default function Index() {
     });
   }, []);
 
+  const handleUpdateSlide = useCallback((updates: Partial<Pick<SlideData, 'title' | 'content'>>) => {
+    setSlides((prev) => prev.map((s, i) => i === currentIndex ? { ...s, ...updates } : s));
+  }, [currentIndex]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight') handleNext();
