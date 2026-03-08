@@ -42,8 +42,9 @@ export default function Index() {
   const [sidebarWidth, setSidebarWidth] = useState(220);
   const [useShowcaseSlides, setUseShowcaseSlides] = useState(true);
 
-  // Track canvas scale for interactive editor
-  const [canvasScale, setCanvasScale] = useState(1);
+  // Track canvas container size for Konva
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
+  const [canvasSize, setCanvasSize] = useState({ width: 800, height: 450 });
 
   useEffect(() => {
     const loaded = loadFromLocalStorage();
