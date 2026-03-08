@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import type { Slide, SlideObject } from '@/store/types';
 import { usePresentationStore } from '@/store/presentationStore';
+import { RotateCw } from 'lucide-react';
 
 interface InteractiveSlideEditorProps {
   slide: Slide;
