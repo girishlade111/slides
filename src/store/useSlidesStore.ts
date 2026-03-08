@@ -1,8 +1,10 @@
 import { create } from 'zustand';
 import { slides as initialSlides, createObject } from '@/data/slides';
 import type { SlideData, SlideObject } from '@/data/slides';
+import { loadFromStorage } from '@/lib/storage';
 
-let slideCounter = initialSlides.length;
+const stored = loadFromStorage();
+let slideCounter = (stored?.slides ?? initialSlides).length;
 
 interface SlidesState {
   slides: SlideData[];
