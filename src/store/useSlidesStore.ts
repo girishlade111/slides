@@ -6,20 +6,27 @@ import {
   loadPresentation, savePresentation, deletePresentation as deletePresentationFromStorage,
   listPresentations as listPresentationsFromStorage,
   createPresentationMeta,
-  type PresentationMeta, type PresentationRecord,
+  type PresentationMeta,
 } from '@/lib/storage';
 
 const stored = loadFromStorage();
 let slideCounter = (stored?.slides ?? initialSlides).length;
 
+function deepCloneSlide(slide: SlideData): SlideData {
+  return {
+    ...slide,
+    id: crypto.randomUUID(),
+    objects: slide.objects.map((o) => ({ ...o, id: crypto.randomUUID() })),
+  };
+}
+
 interface SlidesState {
-  // Presentation meta
   presentationId: string | null;
   presentationMeta: PresentationMeta | null;
-
   slides: SlideData[];
   currentIndex: number;
   selectedObjectId: string | null;
+  clipboardSlide: SlideData | null;
 
   setCurrentIndex: (index: number) => void;
   goNext: () => void;
@@ -29,10 +36,15 @@ interface SlidesState {
   setSlides: (slides: SlideData[]) => void;
   updateSlideName: (slideId: string, name: string) => void;
   addSlide: () => void;
+  addSlideAfter: (index: number) => void;
+  duplicateSlide: (id: string) => void;
   deleteSlide: () => void;
+  deleteSlideById: (id: string) => void;
   moveSlideUp: () => void;
   moveSlideDown: () => void;
   reorderSlides: (fromIndex: number, toIndex: number) => void;
+  copySlide: (id: string) => void;
+  pasteSlide: (targetIndex: number) => void;
 
   updateObjectText: (slideId: string, objectId: string, text: string) => void;
   updateObjectStyle: (slideId: string, objectId: string, style: Partial<SlideObject>) => void;
@@ -41,7 +53,6 @@ interface SlidesState {
   addShape: (shapeType: 'rectangle' | 'circle') => void;
   deleteObject: (slideId: string, objectId: string) => void;
 
-  // Presentation management
   newPresentation: (name: string) => void;
   openPresentation: (id: string) => void;
   saveCurrent: () => void;
@@ -55,10 +66,10 @@ interface SlidesState {
 export const useSlidesStore = create<SlidesState>((set, get) => ({
   presentationId: stored?.meta?.id ?? stored?.id ?? null,
   presentationMeta: stored?.meta ?? null,
-
   slides: stored?.slides ?? initialSlides,
   currentIndex: stored?.currentIndex ?? 0,
   selectedObjectId: null,
+  clipboardSlide: null,
 
   setCurrentIndex: (index) => set({ currentIndex: index, selectedObjectId: null }),
 
@@ -85,7 +96,7 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
     slideCounter++;
     const { currentIndex } = get();
     const newSlide: SlideData = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       name: `New Slide ${slideCounter}`,
       objects: [
         createObject('title', `New Slide ${slideCounter}`),
@@ -99,12 +110,60 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
     });
   },
 
+  addSlideAfter: (index) => {
+    slideCounter++;
+    const { slides } = get();
+    const source = slides[index];
+    // Copy layout structure from source but clear text content
+    const newSlide: SlideData = {
+      id: crypto.randomUUID(),
+      name: `New Slide ${slideCounter}`,
+      objects: source
+        ? source.objects.map((o) => ({
+            ...o,
+            id: crypto.randomUUID(),
+            text: o.type === 'title' ? `New Slide ${slideCounter}` : '',
+          }))
+        : [createObject('title', `New Slide ${slideCounter}`), createObject('body', '')],
+    };
+    set((state) => {
+      const updated = [...state.slides];
+      updated.splice(index + 1, 0, newSlide);
+      return { slides: updated, currentIndex: index + 1, selectedObjectId: null };
+    });
+  },
+
+  duplicateSlide: (id) => {
+    set((state) => {
+      const idx = state.slides.findIndex((s) => s.id === id);
+      if (idx === -1) return state;
+      const clone = deepCloneSlide(state.slides[idx]);
+      clone.name = `${clone.name} (Copy)`;
+      const updated = [...state.slides];
+      updated.splice(idx + 1, 0, clone);
+      return { slides: updated, currentIndex: idx + 1, selectedObjectId: null };
+    });
+  },
+
   deleteSlide: () => {
     const { slides, currentIndex } = get();
     if (slides.length <= 1) return;
     set({
       slides: slides.filter((_, i) => i !== currentIndex),
       currentIndex: Math.min(currentIndex, slides.length - 2),
+      selectedObjectId: null,
+    });
+  },
+
+  deleteSlideById: (id) => {
+    const { slides, currentIndex } = get();
+    if (slides.length <= 1) return;
+    const idx = slides.findIndex((s) => s.id === id);
+    if (idx === -1) return;
+    const updated = slides.filter((s) => s.id !== id);
+    set({
+      slides: updated,
+      currentIndex: currentIndex >= updated.length ? updated.length - 1 : currentIndex > idx ? currentIndex - 1 : currentIndex,
       selectedObjectId: null,
     });
   },
@@ -131,6 +190,22 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
       else if (fromIndex < newIndex && toIndex >= newIndex) newIndex--;
       else if (fromIndex > newIndex && toIndex <= newIndex) newIndex++;
       return { slides: updated, currentIndex: newIndex };
+    });
+  },
+
+  copySlide: (id) => {
+    const slide = get().slides.find((s) => s.id === id);
+    if (slide) set({ clipboardSlide: slide });
+  },
+
+  pasteSlide: (targetIndex) => {
+    const { clipboardSlide } = get();
+    if (!clipboardSlide) return;
+    const clone = deepCloneSlide(clipboardSlide);
+    set((state) => {
+      const updated = [...state.slides];
+      updated.splice(targetIndex + 1, 0, clone);
+      return { slides: updated, currentIndex: targetIndex + 1, selectedObjectId: null };
     });
   },
 
@@ -234,7 +309,6 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
   saveCurrent: () => {
     const { slides, currentIndex, presentationMeta } = get();
     if (!presentationMeta) {
-      // First save — create meta
       const meta = createPresentationMeta('Untitled Presentation', slides.length);
       set({ presentationId: meta.id, presentationMeta: meta });
       savePresentation({ meta, slides, currentIndex });
@@ -255,13 +329,8 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
     saveToStorage({ id: meta.id, slides, currentIndex, meta });
   },
 
-  deleteSavedPresentation: (id) => {
-    deletePresentationFromStorage(id);
-  },
-
-  listSavedPresentations: () => {
-    return listPresentationsFromStorage();
-  },
+  deleteSavedPresentation: (id) => { deletePresentationFromStorage(id); },
+  listSavedPresentations: () => listPresentationsFromStorage(),
 
   updatePresentationMeta: (updates) => {
     const { presentationMeta, slides, currentIndex } = get();
