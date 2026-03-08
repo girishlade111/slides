@@ -113,15 +113,10 @@ export const usePresentationStore = create<PresentationStore>()(
     };
 
     const autoSave = () => {
-      // Debounced auto-save triggered by subscribers
       set({ isSaving: true });
       const { presentation } = get();
-      try {
-        localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(presentation));
-        set({ isSaving: false, lastSavedAt: Date.now() });
-      } catch {
-        set({ isSaving: false });
-      }
+      saveCompressed(AUTOSAVE_KEY, presentation);
+      set({ isSaving: false, lastSavedAt: Date.now() });
     };
 
     return {
