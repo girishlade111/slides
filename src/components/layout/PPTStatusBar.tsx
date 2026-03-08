@@ -28,17 +28,18 @@ export function PPTStatusBar({
   const ZOOM_MIN = 10;
   const ZOOM_MAX = 400;
 
-  const handleZoomSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onZoomChange(parseInt(e.target.value));
-  };
-
   return (
-    <div className="h-6 bg-[#f3f3f3] border-t border-[#d1d1d1] flex items-center justify-between px-2 select-none text-[11px] text-[#666] shrink-0">
-      {/* Left: Slide info */}
+    <div className="h-7 bg-[#f8f9fa] border-t border-[#e0e0e0] flex items-center justify-between px-3 select-none text-[11px] text-[#666] shrink-0">
+      {/* Left: Slide info + Powered by */}
       <div className="flex items-center gap-3">
-        <span>Slide {currentSlide} of {totalSlides}</span>
-        <span className="text-[#999]">|</span>
-        <span>English (United States)</span>
+        <span className="font-medium text-[#555]">Slide {currentSlide} of {totalSlides}</span>
+        <span className="text-[#ccc]">|</span>
+        <span className="text-[#999]">English (United States)</span>
+        <span className="text-[#ccc]">|</span>
+        <span className="text-[10px] text-[#bbb]">
+          Powered by{' '}
+          <span className="font-semibold" style={{ color: 'hsl(174, 80%, 41%)' }}>Lade Stack</span>
+        </span>
       </div>
 
       {/* Right: View buttons + Zoom */}
@@ -47,27 +48,26 @@ export function PPTStatusBar({
         <button
           onClick={onToggleNotes}
           className={cn(
-            "w-6 h-5 flex items-center justify-center rounded-sm hover:bg-[#e0e0e0]",
-            showNotes && "bg-[#d0d0d0]"
+            "w-6 h-5 flex items-center justify-center rounded hover:bg-[#e8e8e8]",
+            showNotes && "bg-[#d8d8d8]"
           )}
           title="Notes"
         >
           <FileText className="w-3 h-3" />
         </button>
 
-        {/* Comments */}
-        <button className="w-6 h-5 flex items-center justify-center rounded-sm hover:bg-[#e0e0e0]" title="Comments">
+        <button className="w-6 h-5 flex items-center justify-center rounded hover:bg-[#e8e8e8]" title="Comments">
           <MessageSquare className="w-3 h-3" />
         </button>
 
-        <div className="w-px h-3 bg-[#c0c0c0] mx-1" />
+        <div className="w-px h-3.5 bg-[#d0d0d0] mx-1" />
 
         {/* View mode buttons */}
         <button
           onClick={() => showGrid && onToggleGrid()}
           className={cn(
-            "w-6 h-5 flex items-center justify-center rounded-sm hover:bg-[#e0e0e0]",
-            !showGrid && "bg-[#d0d0d0]"
+            "w-6 h-5 flex items-center justify-center rounded hover:bg-[#e8e8e8]",
+            !showGrid && "bg-[#d8d8d8]"
           )}
           title="Normal View"
         >
@@ -80,60 +80,61 @@ export function PPTStatusBar({
         <button
           onClick={() => !showGrid && onToggleGrid()}
           className={cn(
-            "w-6 h-5 flex items-center justify-center rounded-sm hover:bg-[#e0e0e0]",
-            showGrid && "bg-[#d0d0d0]"
+            "w-6 h-5 flex items-center justify-center rounded hover:bg-[#e8e8e8]",
+            showGrid && "bg-[#d8d8d8]"
           )}
           title="Slide Sorter"
         >
           <LayoutGrid className="w-3 h-3" />
         </button>
 
-        <button className="w-6 h-5 flex items-center justify-center rounded-sm hover:bg-[#e0e0e0]" title="Reading View">
+        <button className="w-6 h-5 flex items-center justify-center rounded hover:bg-[#e8e8e8]" title="Reading View">
           <BookOpen className="w-3 h-3" />
         </button>
 
         <button
           onClick={onStartPresentation}
-          className="w-6 h-5 flex items-center justify-center rounded-sm hover:bg-[#e0e0e0]"
-          title="Slide Show"
+          className="w-6 h-5 flex items-center justify-center rounded hover:bg-[#e8e8e8]"
+          title="Slide Show (F5)"
         >
           <Play className="w-3 h-3" />
         </button>
 
-        <div className="w-px h-3 bg-[#c0c0c0] mx-1" />
+        <div className="w-px h-3.5 bg-[#d0d0d0] mx-1" />
 
         {/* Zoom controls */}
         <button
           onClick={() => onZoomChange(Math.max(ZOOM_MIN, zoom - 10))}
-          className="w-5 h-5 flex items-center justify-center rounded-sm hover:bg-[#e0e0e0]"
+          className="w-5 h-5 flex items-center justify-center rounded hover:bg-[#e8e8e8]"
         >
           <Minus className="w-2.5 h-2.5" />
         </button>
 
-        <input
-          type="range"
-          min={ZOOM_MIN}
-          max={ZOOM_MAX}
-          value={zoom}
-          onChange={handleZoomSlider}
-          className="w-20 h-1 appearance-none bg-[#c0c0c0] rounded cursor-pointer accent-[#666]"
-          style={{ accentColor: '#666' }}
-        />
+        <div className="relative w-24 h-4 flex items-center">
+          <input
+            type="range"
+            min={ZOOM_MIN}
+            max={ZOOM_MAX}
+            value={zoom}
+            onChange={(e) => onZoomChange(parseInt(e.target.value))}
+            className="w-full h-1 appearance-none bg-[#d0d0d0] rounded-full cursor-pointer"
+            style={{ accentColor: 'hsl(174, 80%, 41%)' }}
+          />
+        </div>
 
         <button
           onClick={() => onZoomChange(Math.min(ZOOM_MAX, zoom + 10))}
-          className="w-5 h-5 flex items-center justify-center rounded-sm hover:bg-[#e0e0e0]"
+          className="w-5 h-5 flex items-center justify-center rounded hover:bg-[#e8e8e8]"
         >
           <Plus className="w-2.5 h-2.5" />
         </button>
 
-        <span className="min-w-[32px] text-center text-[10px]">{zoom}%</span>
+        <span className="min-w-[36px] text-center text-[10px] font-medium text-[#666]">{zoom}%</span>
 
-        {/* Fit to window */}
         <button
           onClick={() => onZoomChange(100)}
-          className="w-6 h-5 flex items-center justify-center rounded-sm hover:bg-[#e0e0e0] text-[10px]"
-          title="Fit slide to current window"
+          className="w-6 h-5 flex items-center justify-center rounded hover:bg-[#e8e8e8]"
+          title="Fit to window"
         >
           <svg viewBox="0 0 16 16" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="1.5">
             <rect x="2" y="4" width="12" height="8" rx="0.5" />

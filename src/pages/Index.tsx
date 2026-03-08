@@ -3,6 +3,7 @@ import { PPTTitleBar } from '@/components/layout/PPTTitleBar';
 import { PPTRibbon } from '@/components/layout/PPTRibbon';
 import { PPTSidebar } from '@/components/layout/PPTSidebar';
 import { PPTStatusBar } from '@/components/layout/PPTStatusBar';
+import { PropertiesPanel } from '@/components/layout/PropertiesPanel';
 import { SlideCanvas } from '@/components/slides/SlideCanvas';
 import { SlideOverviewGrid } from '@/components/slides/SlideOverviewGrid';
 import { PresentationMode } from '@/components/slides/PresentationMode';
@@ -23,12 +24,12 @@ export default function Index() {
   const [showGrid, setShowGrid] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
+  const [showProperties, setShowProperties] = useState(true);
   const [zoom, setZoom] = useState(100);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isPresentationMode, setIsPresentationMode] = useState(false);
   const [isPresenterView, setIsPresenterView] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(220);
-  const [isResizing, setIsResizing] = useState(false);
 
   const slides = React.useMemo<SlideData[]>(() =>
     showcaseSlides.map((s) => ({
@@ -84,7 +85,7 @@ export default function Index() {
   const ActiveSlideComponent = slides[activeSlideIndex]?.component || showcaseSlides[0].component;
 
   return (
-    <div className="h-screen flex flex-col bg-[#f3f3f3] overflow-hidden">
+    <div className="h-screen flex flex-col bg-[#f0f1f3] overflow-hidden">
       {/* Title bar */}
       <PPTTitleBar fileName="Presentation1" />
 
@@ -117,8 +118,8 @@ export default function Index() {
             onSlideClick={setActiveSlideIndex}
             width={sidebarWidth}
             onWidthChange={setSidebarWidth}
-            onResizeStart={() => setIsResizing(true)}
-            onResizeEnd={() => setIsResizing(false)}
+            onResizeStart={() => {}}
+            onResizeEnd={() => {}}
             onSnapClose={() => setShowSidebar(false)}
           />
         )}
@@ -158,6 +159,11 @@ export default function Index() {
             />
           )}
         </div>
+
+        {/* Properties Panel */}
+        {showProperties && (
+          <PropertiesPanel onClose={() => setShowProperties(false)} />
+        )}
       </div>
 
       {/* Status bar */}
