@@ -1,10 +1,11 @@
 import React from 'react';
-import { Stage, Layer, Rect, Text, Circle, Line, Path, Transformer } from 'react-konva';
-import type { SlideData } from '@/data/slides';
+import { Stage, Layer, Rect, Text, Circle, Line, Path, Transformer, Image as KonvaImage, Group } from 'react-konva';
+import type { SlideData, SlideObject } from '@/data/slides';
 import { useSlidesStore } from '@/store/useSlidesStore';
 import { getShapePath, isLineShape } from '@/lib/shapePaths';
 import type Konva from 'konva';
-import { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
+import { useRef, useEffect, useImperativeHandle, forwardRef, useState } from 'react';
+import useImage from 'use-image';
 
 const CANVAS_W = 960;
 const CANVAS_H = 540;
