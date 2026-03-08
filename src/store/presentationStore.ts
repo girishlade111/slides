@@ -593,24 +593,18 @@ export const usePresentationStore = create<PresentationStore>()(
       },
 
       loadFromLocalStorage: () => {
-        try {
-          const data = localStorage.getItem(AUTOSAVE_KEY);
-          if (!data) return false;
-          const presentation = JSON.parse(data) as Presentation;
-          if (presentation && presentation.slides && presentation.slides.length > 0) {
-            set({
-              presentation,
-              currentSlideIndex: 0,
-              selectedObjectIds: [],
-              history: { past: [], future: [] },
-              lastSavedAt: Date.now(),
-            });
-            return true;
-          }
-          return false;
-        } catch {
-          return false;
+        const presentation = loadCompressed<Presentation>(AUTOSAVE_KEY);
+        if (presentation && presentation.slides && presentation.slides.length > 0) {
+          set({
+            presentation,
+            currentSlideIndex: 0,
+            selectedObjectIds: [],
+            history: { past: [], future: [] },
+            lastSavedAt: Date.now(),
+          });
+          return true;
         }
+        return false;
       },
 
       newPresentation: () => {
