@@ -213,6 +213,19 @@ export const KonvaSlideCanvas = forwardRef<KonvaSlideCanvasHandle, KonvaSlideCan
               return renderShape(obj);
             }
 
+            if (obj.type === 'image' && obj.src) {
+              return (
+                <SlideImageObject
+                  key={obj.id}
+                  obj={obj}
+                  readOnly={readOnly}
+                  refSetter={refSetter}
+                  commonEvents={commonEvents}
+                  shadowProps={shadowProps}
+                />
+              );
+            }
+
             const fontSize = obj.fontSize ?? (obj.type === 'title' ? 44 : obj.type === 'subtitle' ? 28 : 22);
             const isBold = obj.fontWeight === 'bold' || obj.type === 'title';
             const isItalic = obj.fontStyle === 'italic';
