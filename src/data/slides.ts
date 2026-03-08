@@ -31,7 +31,7 @@ export const slides: SlideData[] = [
   },
   {
     id: '5',
-    title: 'What's Next?',
+    title: "What's Next?",
     content:
       'Future versions will add slide editing, themes, canvas rendering, and export to PDF and PowerPoint. Stay tuned!',
   },
