@@ -16,6 +16,7 @@ const typeLabels: Record<string, string> = {
 };
 
 export function SlideEditor({ slide, onUpdateText, onAddBody, onDeleteObject }: SlideEditorProps) {
+  if (!slide) return null;
   return (
     <div className="w-72 h-full bg-muted/30 border-l border-border p-4 flex flex-col gap-3 overflow-y-auto">
       <h2 className="text-sm font-semibold text-foreground">Edit Slide</h2>
