@@ -243,9 +243,10 @@ export function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorP
         return (
           <div
             key={obj.id}
+            data-object-wrapper
             className={cn(
               "absolute group",
-              isSelected && "ring-2 ring-[#20B2AA]",
+              isSelected && "ring-2 ring-lade-teal",
               !obj.locked && "cursor-move"
             )}
             style={{
@@ -263,9 +264,24 @@ export function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorP
             {/* Object content */}
             <ObjectRenderer obj={obj} isEditing={isEditing} slideId={slide.id} onStopEditing={() => setEditingTextId(null)} />
 
-            {/* Selection handles */}
+            {/* Selection handles + rotation */}
             {isSelected && !obj.locked && (
-              <SelectionHandles obj={obj} onResizeStart={handleResizeMouseDown} />
+              <>
+                <SelectionHandles obj={obj} onResizeStart={handleResizeMouseDown} />
+                {/* Rotation handle */}
+                <div
+                  className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center z-50"
+                  style={{ top: -36 }}
+                >
+                  <div className="w-px h-4 bg-lade-teal" />
+                  <div
+                    className="w-5 h-5 rounded-full bg-white border-2 border-lade-teal flex items-center justify-center cursor-grab hover:bg-lade-teal/10"
+                    onMouseDown={(e) => handleRotateMouseDown(e, obj)}
+                  >
+                    <RotateCw className="w-3 h-3 text-lade-teal" />
+                  </div>
+                </div>
+              </>
             )}
           </div>
         );
