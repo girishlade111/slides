@@ -556,11 +556,27 @@ function FileRibbon() {
     }
   }, [exporting, store.presentation]);
 
+  const handleExportPPTX = React.useCallback(async () => {
+    if (exporting) return;
+    setExporting(true);
+    toast({ title: 'Exporting PPTX…' });
+    try {
+      const { exportToPPTX } = await import('@/lib/exportPPTX');
+      await exportToPPTX(store.presentation);
+      toast({ title: 'PPTX exported!', description: `${store.presentation.name}.pptx downloaded.` });
+    } catch (err) {
+      console.error('PPTX export failed:', err);
+      toast({ title: 'Export failed', description: String(err), variant: 'destructive' });
+    } finally {
+      setExporting(false);
+    }
+  }, [exporting, store.presentation]);
+
   const items = [
     { label: 'New', desc: 'Create a new presentation', action: () => { store.newPresentation(); toast({ title: 'New presentation created' }); } },
     { label: 'Save', desc: 'Save current presentation', action: () => { store.saveToLocalStorage(); toast({ title: 'Saved' }); } },
     { label: exporting ? 'Exporting…' : 'Export as PDF', desc: 'Download as PDF file', action: handleExportPDF },
-    { label: 'Export as PPTX', desc: 'Download as PowerPoint', action: () => toast({ title: 'Coming soon', description: 'PPTX export is in development.' }) },
+    { label: exporting ? 'Exporting…' : 'Export as PPTX', desc: 'Download as PowerPoint', action: handleExportPPTX },
   ];
   return (
     <div className="flex items-center gap-2 px-4">
