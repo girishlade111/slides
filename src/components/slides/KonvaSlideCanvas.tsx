@@ -204,7 +204,7 @@ export const KonvaSlideCanvas = forwardRef<KonvaSlideCanvasHandle, KonvaSlideCan
         style={{ background: '#ffffff', borderRadius: readOnly ? '0' : '8px', boxShadow: readOnly ? 'none' : '0 4px 24px rgba(0,0,0,0.12)' }}
       >
         <Layer>
-          <Rect x={0} y={0} width={CANVAS_W} height={CANVAS_H} fill="#ffffff" cornerRadius={readOnly ? 0 : 8} listening={false} />
+          <SlideBackgroundLayer background={slide.background} readOnly={readOnly} />
         </Layer>
 
         <Layer>
