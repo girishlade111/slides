@@ -1,7 +1,8 @@
 import React from 'react';
-import { Stage, Layer, Rect, Text, Circle, Transformer } from 'react-konva';
+import { Stage, Layer, Rect, Text, Circle, Line, Path, Transformer } from 'react-konva';
 import type { SlideData } from '@/data/slides';
 import { useSlidesStore } from '@/store/useSlidesStore';
+import { getShapePath, isLineShape } from '@/lib/shapePaths';
 import type Konva from 'konva';
 import { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 
@@ -15,6 +16,13 @@ export interface KonvaSlideCanvasHandle {
 interface KonvaSlideCanvasProps {
   slide: SlideData;
   readOnly?: boolean;
+}
+
+function getDash(style?: string, strokeWidth?: number): number[] | undefined {
+  const sw = strokeWidth ?? 2;
+  if (style === 'dashed') return [sw * 4, sw * 2];
+  if (style === 'dotted') return [sw, sw * 2];
+  return undefined;
 }
 
 export const KonvaSlideCanvas = forwardRef<KonvaSlideCanvasHandle, KonvaSlideCanvasProps>(
@@ -75,6 +83,117 @@ export const KonvaSlideCanvas = forwardRef<KonvaSlideCanvasHandle, KonvaSlideCan
       onTransformEnd: (e: Konva.KonvaEventObject<Event>) => handleTransformEnd(id, e),
     });
 
+    const shadowProps = (obj: { shadow?: { enabled: boolean; color: string; blur: number; offsetX: number; offsetY: number } }) => {
+      if (!obj.shadow?.enabled) return {};
+      return {
+        shadowColor: obj.shadow.color,
+        shadowBlur: obj.shadow.blur,
+        shadowOffsetX: obj.shadow.offsetX,
+        shadowOffsetY: obj.shadow.offsetY,
+        shadowEnabled: true,
+      };
+    };
+
+    const renderShape = (obj: SlideData['objects'][number]) => {
+      const shapeType = obj.shapeType ?? 'rectangle';
+      const fill = obj.fill ?? '#60A5FA';
+      const stroke = obj.stroke ?? '#1E40AF';
+      const sw = obj.strokeWidth ?? 2;
+      const dash = getDash(obj.strokeStyle, sw);
+      const opacity = obj.fillOpacity ?? 1;
+      const rotation = obj.rotation ?? 0;
+      const sharedProps = {
+        draggable: !readOnly,
+        rotation,
+        opacity,
+        ...shadowProps(obj),
+        ...commonEvents(obj.id),
+      };
+
+      // Line types
+      if (isLineShape(shapeType)) {
+        let points: number[];
+        if (shapeType === 'elbow-connector') {
+          points = [0, 0, obj.width / 2, 0, obj.width / 2, obj.height, obj.width, obj.height];
+        } else {
+          points = [0, 0, obj.width, obj.height];
+        }
+        return (
+          <Line
+            key={obj.id}
+            ref={refSetter(obj.id) as React.LegacyRef<Konva.Line>}
+            x={obj.x}
+            y={obj.y}
+            points={points}
+            stroke={stroke}
+            strokeWidth={sw}
+            dash={dash}
+            hitStrokeWidth={12}
+            {...sharedProps}
+          />
+        );
+      }
+
+      // Path-based shapes
+      const pathData = getShapePath(shapeType, obj.width, obj.height);
+      if (pathData) {
+        return (
+          <Path
+            key={obj.id}
+            ref={refSetter(obj.id) as React.LegacyRef<Konva.Path>}
+            x={obj.x}
+            y={obj.y}
+            data={pathData}
+            fill={fill}
+            stroke={stroke}
+            strokeWidth={sw}
+            dash={dash}
+            width={obj.width}
+            height={obj.height}
+            {...sharedProps}
+          />
+        );
+      }
+
+      // Circle / Ellipse
+      if (shapeType === 'circle') {
+        return (
+          <Circle
+            key={obj.id}
+            ref={refSetter(obj.id) as React.LegacyRef<Konva.Circle>}
+            x={obj.x + obj.width / 2}
+            y={obj.y + obj.height / 2}
+            radius={Math.min(obj.width, obj.height) / 2}
+            fill={fill}
+            stroke={stroke}
+            strokeWidth={sw}
+            dash={dash}
+            {...sharedProps}
+          />
+        );
+      }
+
+      // Rounded rect types
+      const cornerRadius = (shapeType === 'rounded-rectangle' || shapeType === 'start-end') ? Math.min(obj.width, obj.height) * 0.25 : 0;
+
+      return (
+        <Rect
+          key={obj.id}
+          ref={refSetter(obj.id) as React.LegacyRef<Konva.Rect>}
+          x={obj.x}
+          y={obj.y}
+          width={obj.width}
+          height={obj.height}
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={sw}
+          cornerRadius={cornerRadius}
+          dash={dash}
+          {...sharedProps}
+        />
+      );
+    };
+
     return (
       <Stage
         ref={stageRef}
@@ -90,37 +209,7 @@ export const KonvaSlideCanvas = forwardRef<KonvaSlideCanvasHandle, KonvaSlideCan
         <Layer>
           {slide.objects.map((obj) => {
             if (obj.type === 'shape') {
-              if (obj.shapeType === 'circle') {
-                return (
-                  <Circle
-                    key={obj.id}
-                    ref={refSetter(obj.id) as React.LegacyRef<Konva.Circle>}
-                    x={obj.x + obj.width / 2}
-                    y={obj.y + obj.height / 2}
-                    radius={Math.min(obj.width, obj.height) / 2}
-                    fill={obj.fill ?? '#3b82f6'}
-                    stroke={obj.stroke ?? '#1e40af'}
-                    strokeWidth={obj.strokeWidth ?? 2}
-                    draggable={!readOnly}
-                    {...commonEvents(obj.id)}
-                  />
-                );
-              }
-              return (
-                <Rect
-                  key={obj.id}
-                  ref={refSetter(obj.id) as React.LegacyRef<Konva.Rect>}
-                  x={obj.x}
-                  y={obj.y}
-                  width={obj.width}
-                  height={obj.height}
-                  fill={obj.fill ?? '#3b82f6'}
-                  stroke={obj.stroke ?? '#1e40af'}
-                  strokeWidth={obj.strokeWidth ?? 2}
-                  draggable={!readOnly}
-                  {...commonEvents(obj.id)}
-                />
-              );
+              return renderShape(obj);
             }
 
             const fontSize = obj.fontSize ?? (obj.type === 'title' ? 44 : obj.type === 'subtitle' ? 28 : 22);
@@ -129,7 +218,6 @@ export const KonvaSlideCanvas = forwardRef<KonvaSlideCanvasHandle, KonvaSlideCan
             const fontStyleStr = `${isBold ? 'bold' : ''}${isItalic ? ' italic' : ''}`.trim() || 'normal';
             const decoration = obj.textDecoration && obj.textDecoration !== 'none' ? obj.textDecoration : '';
 
-            // Format text for list styles
             let displayText = obj.text || (obj.type === 'title' ? 'Untitled' : 'Text...');
             if (obj.listStyle === 'bullet') {
               displayText = displayText.split('\n').map((line) => `• ${line}`).join('\n');
@@ -140,14 +228,7 @@ export const KonvaSlideCanvas = forwardRef<KonvaSlideCanvasHandle, KonvaSlideCan
             return (
               <React.Fragment key={obj.id}>
                 {obj.backgroundColor && obj.backgroundColor !== 'transparent' && (
-                  <Rect
-                    x={obj.x}
-                    y={obj.y}
-                    width={obj.width}
-                    height={obj.height}
-                    fill={obj.backgroundColor}
-                    listening={false}
-                  />
+                  <Rect x={obj.x} y={obj.y} width={obj.width} height={obj.height} fill={obj.backgroundColor} listening={false} />
                 )}
                 <Text
                   ref={refSetter(obj.id) as React.LegacyRef<Konva.Text>}
@@ -174,14 +255,14 @@ export const KonvaSlideCanvas = forwardRef<KonvaSlideCanvasHandle, KonvaSlideCan
           {!readOnly && (
             <Transformer
               ref={transformerRef}
-              rotateEnabled={false}
+              rotateEnabled={true}
               boundBoxFunc={(_oldBox, newBox) => {
                 if (newBox.width < 20 || newBox.height < 20) return _oldBox;
                 return newBox;
               }}
-              borderStroke="hsl(221, 83%, 53%)"
+              borderStroke="hsl(174, 80%, 41%)"
               borderStrokeWidth={2}
-              anchorStroke="hsl(221, 83%, 53%)"
+              anchorStroke="hsl(174, 80%, 41%)"
               anchorFill="#ffffff"
               anchorSize={8}
               anchorCornerRadius={2}

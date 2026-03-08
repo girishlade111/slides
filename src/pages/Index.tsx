@@ -3,6 +3,7 @@ import { Check, Loader2, Play, Plus } from 'lucide-react';
 import { SlideEditor } from '@/components/SlideEditor';
 import { FileMenu } from '@/components/FileMenu';
 import { SlideSidebar } from '@/components/SlideSidebar';
+import { ShapesMenu } from '@/components/ShapesMenu';
 import { TextFormattingToolbar } from '@/components/TextFormattingToolbar';
 import { KonvaSlideCanvas, type KonvaSlideCanvasHandle } from '@/components/slides/KonvaSlideCanvas';
 import { PresentationOverlay } from '@/components/slides/PresentationOverlay';
@@ -134,6 +135,7 @@ export default function Index() {
             <Plus className="w-3 h-3" />
             Text Box
           </button>
+          <ShapesMenu />
           <button
             onClick={() => setPresenting(true)}
             className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"

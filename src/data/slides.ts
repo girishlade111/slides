@@ -1,3 +1,19 @@
+export type ShapeType =
+  | 'rectangle' | 'rounded-rectangle' | 'circle' | 'triangle' | 'diamond'
+  | 'pentagon' | 'hexagon' | 'octagon' | 'star' | 'heart' | 'cloud'
+  | 'arrow-right' | 'arrow-left' | 'arrow-up' | 'arrow-down' | 'double-arrow' | 'curved-arrow'
+  | 'line' | 'connector-line' | 'elbow-connector'
+  | 'process' | 'decision' | 'start-end' | 'document' | 'database' | 'manual-input'
+  | 'speech-bubble' | 'thought-bubble' | 'rectangular-callout' | 'banner' | 'ribbon';
+
+export interface ShadowConfig {
+  enabled: boolean;
+  color: string;
+  blur: number;
+  offsetX: number;
+  offsetY: number;
+}
+
 export interface SlideObject {
   id: string;
   type: 'title' | 'subtitle' | 'body' | 'shape';
@@ -18,10 +34,13 @@ export interface SlideObject {
   listStyle?: 'none' | 'bullet' | 'numbered';
   rotation?: number;
   // Shape-specific
-  shapeType?: 'rectangle' | 'circle';
+  shapeType?: ShapeType;
   fill?: string;
+  fillOpacity?: number;
   stroke?: string;
   strokeWidth?: number;
+  strokeStyle?: 'solid' | 'dashed' | 'dotted';
+  shadow?: ShadowConfig;
 }
 
 export interface SlideData {
@@ -38,7 +57,7 @@ const defaults: Record<string, Partial<SlideObject>> = {
   title: { x: 60, y: 40, width: 840, height: 80, fontSize: 44, align: 'center' },
   subtitle: { x: 60, y: 130, width: 840, height: 50, fontSize: 28, align: 'center' },
   body: { x: 60, y: 200, width: 840, height: 260, fontSize: 22, align: 'left' },
-  shape: { x: 200, y: 200, width: 200, height: 150, fill: '#3b82f6', stroke: '#1e40af', strokeWidth: 2 },
+  shape: { x: 380, y: 195, width: 200, height: 150, fill: '#60A5FA', stroke: '#1E40AF', strokeWidth: 2 },
 };
 
 export function createObject(
