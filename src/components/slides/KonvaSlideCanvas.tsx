@@ -1,6 +1,6 @@
 import React from 'react';
 import { Stage, Layer, Rect, Text, Circle, Line, Path, Transformer, Image as KonvaImage } from 'react-konva';
-import type { SlideData, SlideObject } from '@/data/slides';
+import type { SlideData, SlideObject, SlideBackground } from '@/data/slides';
 import { useSlidesStore } from '@/store/useSlidesStore';
 import { getShapePath, isLineShape } from '@/lib/shapePaths';
 import type Konva from 'konva';
