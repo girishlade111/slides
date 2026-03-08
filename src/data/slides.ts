@@ -1,3 +1,19 @@
+export type ShapeType =
+  | 'rectangle' | 'rounded-rectangle' | 'circle' | 'triangle' | 'diamond'
+  | 'pentagon' | 'hexagon' | 'octagon' | 'star' | 'heart' | 'cloud'
+  | 'arrow-right' | 'arrow-left' | 'arrow-up' | 'arrow-down' | 'double-arrow' | 'curved-arrow'
+  | 'line' | 'connector-line' | 'elbow-connector'
+  | 'process' | 'decision' | 'start-end' | 'document' | 'database' | 'manual-input'
+  | 'speech-bubble' | 'thought-bubble' | 'rectangular-callout' | 'banner' | 'ribbon';
+
+export interface ShadowConfig {
+  enabled: boolean;
+  color: string;
+  blur: number;
+  offsetX: number;
+  offsetY: number;
+}
+
 export interface SlideObject {
   id: string;
   type: 'title' | 'subtitle' | 'body' | 'shape';
@@ -18,10 +34,13 @@ export interface SlideObject {
   listStyle?: 'none' | 'bullet' | 'numbered';
   rotation?: number;
   // Shape-specific
-  shapeType?: 'rectangle' | 'circle';
+  shapeType?: ShapeType;
   fill?: string;
+  fillOpacity?: number;
   stroke?: string;
   strokeWidth?: number;
+  strokeStyle?: 'solid' | 'dashed' | 'dotted';
+  shadow?: ShadowConfig;
 }
 
 export interface SlideData {
