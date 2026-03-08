@@ -9,15 +9,11 @@ interface SlidesState {
   currentIndex: number;
   selectedObjectId: string | null;
 
-  // Navigation
   setCurrentIndex: (index: number) => void;
   goNext: () => void;
   goPrev: () => void;
-
-  // Selection
   setSelectedObjectId: (id: string | null) => void;
 
-  // Slide CRUD
   setSlides: (slides: SlideData[]) => void;
   updateSlideName: (slideId: string, name: string) => void;
   addSlide: () => void;
@@ -26,11 +22,11 @@ interface SlidesState {
   moveSlideDown: () => void;
   reorderSlides: (fromIndex: number, toIndex: number) => void;
 
-  // Object operations
   updateObjectText: (slideId: string, objectId: string, text: string) => void;
   updateObjectStyle: (slideId: string, objectId: string, style: Partial<SlideObject>) => void;
   setObjectPosition: (slideId: string, objectId: string, x: number, y: number) => void;
   addBodyObject: (slideId: string) => void;
+  addShape: (shapeType: 'rectangle' | 'circle') => void;
   deleteObject: (slideId: string, objectId: string) => void;
 }
 
@@ -52,7 +48,6 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
   },
 
   setSelectedObjectId: (id) => set({ selectedObjectId: id }),
-
   setSlides: (slides) => set({ slides }),
 
   updateSlideName: (slideId, name) => {
@@ -116,7 +111,6 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
     });
   },
 
-  // Object operations
   updateObjectText: (slideId, objectId, text) => {
     set((state) => ({
       slides: state.slides.map((s) =>
@@ -158,6 +152,19 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
     set((state) => ({
       slides: state.slides.map((s) =>
         s.id === slideId ? { ...s, objects: [...s.objects, newObj] } : s
+      ),
+      selectedObjectId: newObj.id,
+    }));
+  },
+
+  addShape: (shapeType) => {
+    const { slides, currentIndex } = get();
+    const slide = slides[currentIndex];
+    if (!slide) return;
+    const newObj = createObject('shape', '', { shapeType, x: 300 + Math.random() * 100, y: 180 + Math.random() * 80 });
+    set((state) => ({
+      slides: state.slides.map((s) =>
+        s.id === slide.id ? { ...s, objects: [...s.objects, newObj] } : s
       ),
       selectedObjectId: newObj.id,
     }));
