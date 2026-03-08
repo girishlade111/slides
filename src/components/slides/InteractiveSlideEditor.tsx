@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import type { Slide, SlideObject } from '@/store/types';
 import { usePresentationStore } from '@/store/presentationStore';
+import { RotateCw } from 'lucide-react';
 
 interface InteractiveSlideEditorProps {
   slide: Slide;
@@ -13,7 +14,7 @@ interface InteractiveSlideEditorProps {
  * dragging, resizing, and inline text editing.
  */
 export function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorProps) {
-  const { selectedObjectIds, selectObjects, clearSelection, updateObject, deleteObject } = usePresentationStore();
+  const { selectedObjectIds, selectObjects, clearSelection, updateObject, deleteObject, moveObject, rotateObject, duplicateObject, bringToFront, sendToBack } = usePresentationStore();
   const [dragState, setDragState] = useState<{
     objectId: string;
     startX: number;
@@ -32,7 +33,13 @@ export function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorP
     startObjY: number;
   } | null>(null);
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
-
+  const [rotateState, setRotateState] = useState<{
+    objectId: string;
+    centerX: number;
+    centerY: number;
+    startAngle: number;
+    startRotation: number;
+  } | null>(null);
   const bgStyle = getBackgroundStyle(slide.background);
 
   // Handle clicking on empty canvas area
@@ -78,9 +85,30 @@ export function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorP
     });
   }, [scale]);
 
-  // Mouse move handler for drag/resize
+  // Rotation handle
+  const handleRotateMouseDown = useCallback((e: React.MouseEvent, obj: SlideObject) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (obj.locked) return;
+
+    const rect = (e.target as HTMLElement).closest('[data-object-wrapper]')?.getBoundingClientRect();
+    if (!rect) return;
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const startAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
+
+    setRotateState({
+      objectId: obj.id,
+      centerX,
+      centerY,
+      startAngle,
+      startRotation: obj.rotation,
+    });
+  }, []);
+
+  // Mouse move handler for drag/resize/rotate
   useEffect(() => {
-    if (!dragState && !resizeState) return;
+    if (!dragState && !resizeState && !rotateState) return;
 
     const handleMouseMove = (e: MouseEvent) => {
       if (dragState) {
@@ -112,11 +140,21 @@ export function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorP
           position: { x: Math.round(newX), y: Math.round(newY) },
         });
       }
+      if (rotateState) {
+        const currentAngle = Math.atan2(e.clientY - rotateState.centerY, e.clientX - rotateState.centerX) * (180 / Math.PI);
+        let newRotation = rotateState.startRotation + (currentAngle - rotateState.startAngle);
+        // Snap to 15-degree increments when holding Shift
+        if (e.shiftKey) {
+          newRotation = Math.round(newRotation / 15) * 15;
+        }
+        rotateObject(slide.id, rotateState.objectId, newRotation);
+      }
     };
 
     const handleMouseUp = () => {
       setDragState(null);
       setResizeState(null);
+      setRotateState(null);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -125,7 +163,7 @@ export function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorP
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [dragState, resizeState, scale, slide.id, updateObject]);
+  }, [dragState, resizeState, rotateState, scale, slide.id, updateObject, rotateObject]);
 
   // Double-click to edit text
   const handleDoubleClick = useCallback((e: React.MouseEvent, obj: SlideObject) => {
@@ -135,19 +173,59 @@ export function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorP
     }
   }, []);
 
-  // Handle keyboard on selected objects
+  // Handle keyboard on selected objects (delete, arrow nudge, layer ordering, duplicate)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (editingTextId) return; // Don't handle when editing text
+      if (editingTextId) return;
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (selectedObjectIds.length === 0) return;
 
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        selectedObjectIds.forEach((id) => deleteObject(slide.id, id));
+      const step = e.shiftKey ? 10 : 1;
+
+      switch (e.key) {
+        case 'Delete':
+        case 'Backspace':
+          selectedObjectIds.forEach((id) => deleteObject(slide.id, id));
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          selectedObjectIds.forEach((id) => moveObject(slide.id, id, 0, -step));
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          selectedObjectIds.forEach((id) => moveObject(slide.id, id, 0, step));
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          selectedObjectIds.forEach((id) => moveObject(slide.id, id, -step, 0));
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          selectedObjectIds.forEach((id) => moveObject(slide.id, id, step, 0));
+          break;
+        case ']':
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            selectedObjectIds.forEach((id) => e.shiftKey ? bringToFront(slide.id, id) : usePresentationStore.getState().bringForward(slide.id, id));
+          }
+          break;
+        case '[':
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            selectedObjectIds.forEach((id) => e.shiftKey ? sendToBack(slide.id, id) : usePresentationStore.getState().sendBackward(slide.id, id));
+          }
+          break;
+        case 'd':
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            selectedObjectIds.forEach((id) => duplicateObject(slide.id, id));
+          }
+          break;
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedObjectIds, editingTextId, slide.id, deleteObject]);
+  }, [selectedObjectIds, editingTextId, slide.id, deleteObject, moveObject, duplicateObject, bringToFront, sendToBack]);
 
   const sortedObjects = [...slide.objects].sort((a, b) => a.zIndex - b.zIndex);
 
@@ -165,9 +243,10 @@ export function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorP
         return (
           <div
             key={obj.id}
+            data-object-wrapper
             className={cn(
               "absolute group",
-              isSelected && "ring-2 ring-[#20B2AA]",
+              isSelected && "ring-2 ring-lade-teal",
               !obj.locked && "cursor-move"
             )}
             style={{
@@ -185,9 +264,24 @@ export function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorP
             {/* Object content */}
             <ObjectRenderer obj={obj} isEditing={isEditing} slideId={slide.id} onStopEditing={() => setEditingTextId(null)} />
 
-            {/* Selection handles */}
+            {/* Selection handles + rotation */}
             {isSelected && !obj.locked && (
-              <SelectionHandles obj={obj} onResizeStart={handleResizeMouseDown} />
+              <>
+                <SelectionHandles obj={obj} onResizeStart={handleResizeMouseDown} />
+                {/* Rotation handle */}
+                <div
+                  className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center z-50"
+                  style={{ top: -36 }}
+                >
+                  <div className="w-px h-4 bg-lade-teal" />
+                  <div
+                    className="w-5 h-5 rounded-full bg-white border-2 border-lade-teal flex items-center justify-center cursor-grab hover:bg-lade-teal/10"
+                    onMouseDown={(e) => handleRotateMouseDown(e, obj)}
+                  >
+                    <RotateCw className="w-3 h-3 text-lade-teal" />
+                  </div>
+                </div>
+              </>
             )}
           </div>
         );
