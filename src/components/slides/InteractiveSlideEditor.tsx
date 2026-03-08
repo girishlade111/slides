@@ -13,7 +13,7 @@ interface InteractiveSlideEditorProps {
  * Interactive slide editor that renders slide objects with selection,
  * dragging, resizing, and inline text editing.
  */
-export function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorProps) {
+export const InteractiveSlideEditor = React.memo(function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorProps) {
   const { selectedObjectIds, selectObjects, clearSelection, updateObject, deleteObject, moveObject, rotateObject, duplicateObject, bringToFront, sendToBack } = usePresentationStore();
   const [dragState, setDragState] = useState<{
     objectId: string;
@@ -311,7 +311,7 @@ export function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorP
       )}
     </div>
   );
-}
+});
 
 /** Renders object content based on type */
 function ObjectRenderer({ obj, isEditing, slideId, onStopEditing }: {
