@@ -294,6 +294,170 @@ export const usePresentationStore = create<PresentationStore>()(
       selectObjects: (objectIds: string[]) => set({ selectedObjectIds: objectIds }),
       clearSelection: () => set({ selectedObjectIds: [] }),
 
+      // === Dedicated Object Manipulation ===
+
+      moveObject: (slideId: string, objectId: string, deltaX: number, deltaY: number) => {
+        set((state) => ({
+          presentation: {
+            ...state.presentation,
+            slides: state.presentation.slides.map((s) =>
+              s.id === slideId
+                ? {
+                    ...s,
+                    objects: s.objects.map((o) =>
+                      o.id === objectId
+                        ? { ...o, position: { x: Math.round(o.position.x + deltaX), y: Math.round(o.position.y + deltaY) } }
+                        : o
+                    ),
+                  }
+                : s
+            ),
+            updatedAt: Date.now(),
+          },
+        }));
+      },
+
+      resizeObject: (slideId: string, objectId: string, width: number, height: number) => {
+        pushHistory();
+        set((state) => ({
+          presentation: {
+            ...state.presentation,
+            slides: state.presentation.slides.map((s) =>
+              s.id === slideId
+                ? {
+                    ...s,
+                    objects: s.objects.map((o) =>
+                      o.id === objectId
+                        ? { ...o, size: { width: Math.max(20, Math.round(width)), height: Math.max(20, Math.round(height)) } }
+                        : o
+                    ),
+                  }
+                : s
+            ),
+            updatedAt: Date.now(),
+          },
+        }));
+        autoSave();
+      },
+
+      rotateObject: (slideId: string, objectId: string, angle: number) => {
+        pushHistory();
+        set((state) => ({
+          presentation: {
+            ...state.presentation,
+            slides: state.presentation.slides.map((s) =>
+              s.id === slideId
+                ? {
+                    ...s,
+                    objects: s.objects.map((o) =>
+                      o.id === objectId ? { ...o, rotation: angle % 360 } : o
+                    ),
+                  }
+                : s
+            ),
+            updatedAt: Date.now(),
+          },
+        }));
+        autoSave();
+      },
+
+      duplicateObject: (slideId: string, objectId: string) => {
+        pushHistory();
+        set((state) => {
+          const slide = state.presentation.slides.find((s) => s.id === slideId);
+          if (!slide) return state;
+          const source = slide.objects.find((o) => o.id === objectId);
+          if (!source) return state;
+          const clone: SlideObject = {
+            ...deepClone(source),
+            id: crypto.randomUUID(),
+            position: { x: source.position.x + 30, y: source.position.y + 30 },
+            zIndex: Date.now(),
+          };
+          return {
+            presentation: {
+              ...state.presentation,
+              slides: state.presentation.slides.map((s) =>
+                s.id === slideId ? { ...s, objects: [...s.objects, clone] } : s
+              ),
+              updatedAt: Date.now(),
+            },
+            selectedObjectIds: [clone.id],
+          };
+        });
+        autoSave();
+      },
+
+      bringToFront: (slideId: string, objectId: string) => {
+        pushHistory();
+        set((state) => {
+          const maxZ = Math.max(...(state.presentation.slides.find(s => s.id === slideId)?.objects.map(o => o.zIndex) || [0]));
+          return {
+            presentation: {
+              ...state.presentation,
+              slides: state.presentation.slides.map((s) =>
+                s.id === slideId
+                  ? { ...s, objects: s.objects.map((o) => o.id === objectId ? { ...o, zIndex: maxZ + 1 } : o) }
+                  : s
+              ),
+              updatedAt: Date.now(),
+            },
+          };
+        });
+        autoSave();
+      },
+
+      sendToBack: (slideId: string, objectId: string) => {
+        pushHistory();
+        set((state) => {
+          const minZ = Math.min(...(state.presentation.slides.find(s => s.id === slideId)?.objects.map(o => o.zIndex) || [0]));
+          return {
+            presentation: {
+              ...state.presentation,
+              slides: state.presentation.slides.map((s) =>
+                s.id === slideId
+                  ? { ...s, objects: s.objects.map((o) => o.id === objectId ? { ...o, zIndex: minZ - 1 } : o) }
+                  : s
+              ),
+              updatedAt: Date.now(),
+            },
+          };
+        });
+        autoSave();
+      },
+
+      bringForward: (slideId: string, objectId: string) => {
+        pushHistory();
+        set((state) => ({
+          presentation: {
+            ...state.presentation,
+            slides: state.presentation.slides.map((s) =>
+              s.id === slideId
+                ? { ...s, objects: s.objects.map((o) => o.id === objectId ? { ...o, zIndex: o.zIndex + 1 } : o) }
+                : s
+            ),
+            updatedAt: Date.now(),
+          },
+        }));
+        autoSave();
+      },
+
+      sendBackward: (slideId: string, objectId: string) => {
+        pushHistory();
+        set((state) => ({
+          presentation: {
+            ...state.presentation,
+            slides: state.presentation.slides.map((s) =>
+              s.id === slideId
+                ? { ...s, objects: s.objects.map((o) => o.id === objectId ? { ...o, zIndex: Math.max(0, o.zIndex - 1) } : o) }
+                : s
+            ),
+            updatedAt: Date.now(),
+          },
+        }));
+        autoSave();
+      },
+
       // === Clipboard ===
 
       copyObjects: () => {
