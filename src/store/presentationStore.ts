@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
+import LZString from 'lz-string';
 import {
   Presentation,
   Slide,
@@ -11,6 +12,32 @@ import {
 
 const MAX_HISTORY = 20;
 const AUTOSAVE_KEY = 'lade-slides-presentation';
+const AUTOSAVE_DEBOUNCE_MS = 3000;
+
+// Compressed persistence helpers
+function saveCompressed(key: string, data: unknown): void {
+  try {
+    const json = JSON.stringify(data);
+    const compressed = LZString.compressToUTF16(json);
+    localStorage.setItem(key, compressed);
+  } catch (e) {
+    console.warn('Auto-save failed:', e);
+  }
+}
+
+function loadCompressed<T>(key: string): T | null {
+  try {
+    const compressed = localStorage.getItem(key);
+    if (!compressed) return null;
+    // Try decompressing first (new format)
+    const json = LZString.decompressFromUTF16(compressed);
+    if (json) return JSON.parse(json) as T;
+    // Fallback: try raw JSON (old format migration)
+    return JSON.parse(compressed) as T;
+  } catch {
+    return null;
+  }
+}
 
 interface PresentationStore {
   // Core state
