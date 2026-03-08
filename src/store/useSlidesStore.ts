@@ -50,6 +50,7 @@ interface SlidesState {
   updateObjectStyle: (slideId: string, objectId: string, style: Partial<SlideObject>) => void;
   setObjectPosition: (slideId: string, objectId: string, x: number, y: number) => void;
   addBodyObject: (slideId: string) => void;
+  addTextBox: (slideId: string) => void;
   addShape: (shapeType: 'rectangle' | 'circle') => void;
   deleteObject: (slideId: string, objectId: string) => void;
 
