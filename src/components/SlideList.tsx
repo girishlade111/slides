@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { SlideData } from '@/data/slides';
+import { getSlideName } from '@/data/slides';
 import { cn } from '@/lib/utils';
 
 interface SlideListProps {
@@ -67,7 +68,7 @@ export function SlideList({ slides, currentIndex, onSelect, onReorder }: SlideLi
           )}>
             {index + 1}
           </span>
-          <span className="text-sm font-medium truncate">{slide.title}</span>
+          <span className="text-sm font-medium truncate">{getSlideName(slide)}</span>
         </button>
       ))}
     </nav>

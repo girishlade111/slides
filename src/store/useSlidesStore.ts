@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { slides as initialSlides } from '@/data/slides';
-import type { SlideData } from '@/data/slides';
+import type { SlideData, SlideObject } from '@/data/slides';
 
 let slideCounter = initialSlides.length;
 
@@ -15,16 +15,17 @@ interface SlidesState {
 
   // Slide CRUD
   setSlides: (slides: SlideData[]) => void;
-  updateSlide: (id: string, updates: Partial<Pick<SlideData, 'title' | 'content'>>) => void;
+  updateSlideName: (slideId: string, name: string) => void;
   addSlide: () => void;
   deleteSlide: () => void;
   moveSlideUp: () => void;
   moveSlideDown: () => void;
   reorderSlides: (fromIndex: number, toIndex: number) => void;
 
-  // Derived helpers
-  currentSlide: () => SlideData;
-  totalSlides: () => number;
+  // Object operations
+  updateObjectText: (slideId: string, objectId: string, text: string) => void;
+  addBodyObject: (slideId: string) => void;
+  deleteObject: (slideId: string, objectId: string) => void;
 }
 
 export const useSlidesStore = create<SlidesState>((set, get) => ({
@@ -45,9 +46,9 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
 
   setSlides: (slides) => set({ slides }),
 
-  updateSlide: (id, updates) => {
+  updateSlideName: (slideId, name) => {
     set((state) => ({
-      slides: state.slides.map((s) => (s.id === id ? { ...s, ...updates } : s)),
+      slides: state.slides.map((s) => (s.id === slideId ? { ...s, name } : s)),
     }));
   },
 
@@ -56,8 +57,11 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
     const { currentIndex } = get();
     const newSlide: SlideData = {
       id: Date.now().toString(),
-      title: `New Slide ${slideCounter}`,
-      content: '',
+      name: `New Slide ${slideCounter}`,
+      objects: [
+        { id: crypto.randomUUID(), type: 'title', text: `New Slide ${slideCounter}` },
+        { id: crypto.randomUUID(), type: 'body', text: '' },
+      ],
     };
     set((state) => {
       const updated = [...state.slides];
@@ -102,10 +106,43 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
     });
   },
 
-  currentSlide: () => {
-    const { slides, currentIndex } = get();
-    return slides[currentIndex];
+  // Object operations
+  updateObjectText: (slideId, objectId, text) => {
+    set((state) => ({
+      slides: state.slides.map((s) =>
+        s.id === slideId
+          ? {
+              ...s,
+              objects: s.objects.map((o) => (o.id === objectId ? { ...o, text } : o)),
+              // Keep name synced with title object
+              name: s.objects.find((o) => o.id === objectId)?.type === 'title' ? text : s.name,
+            }
+          : s
+      ),
+    }));
   },
 
-  totalSlides: () => get().slides.length,
+  addBodyObject: (slideId) => {
+    const newObj: SlideObject = {
+      id: crypto.randomUUID(),
+      type: 'body',
+      text: '',
+    };
+    set((state) => ({
+      slides: state.slides.map((s) =>
+        s.id === slideId ? { ...s, objects: [...s.objects, newObj] } : s
+      ),
+    }));
+  },
+
+  deleteObject: (slideId, objectId) => {
+    set((state) => ({
+      slides: state.slides.map((s) => {
+        if (s.id !== slideId) return s;
+        // Don't delete if it's the last object
+        if (s.objects.length <= 1) return s;
+        return { ...s, objects: s.objects.filter((o) => o.id !== objectId) };
+      }),
+    }));
+  },
 }));
