@@ -287,3 +287,68 @@ export const KonvaSlideCanvas = forwardRef<KonvaSlideCanvasHandle, KonvaSlideCan
     );
   }
 );
+
+// Separate component for image rendering (uses hooks)
+interface SlideImageObjectProps {
+  obj: SlideObject;
+  readOnly: boolean;
+  refSetter: (id: string) => (node: Konva.Node | null) => void;
+  commonEvents: (id: string) => Record<string, unknown>;
+  shadowProps: (obj: { shadow?: { enabled: boolean; color: string; blur: number; offsetX: number; offsetY: number } }) => Record<string, unknown>;
+}
+
+function SlideImageObject({ obj, readOnly, refSetter, commonEvents, shadowProps }: SlideImageObjectProps) {
+  const [image] = useImage(obj.src ?? '', 'anonymous');
+  
+  const filters = obj.filters ?? { grayscale: false, sepia: false, blur: 0, brightness: 100, contrast: 100, saturation: 100 };
+  const border = obj.border ?? { enabled: false, color: '#1E40AF', width: 2 };
+  
+  // Build CSS filter string for Konva
+  const getFilters = (): Konva.Filter[] => {
+    const result: Konva.Filter[] = [];
+    if (filters.grayscale) result.push(Konva.Filters.Grayscale);
+    if (filters.sepia) result.push(Konva.Filters.Sepia);
+    if (filters.blur > 0) result.push(Konva.Filters.Blur);
+    if (filters.brightness !== 100) result.push(Konva.Filters.Brighten);
+    if (filters.contrast !== 100) result.push(Konva.Filters.Contrast);
+    return result;
+  };
+
+  if (!image) return null;
+
+  return (
+    <React.Fragment>
+      {/* Border background */}
+      {border.enabled && (
+        <Rect
+          x={obj.x - border.width}
+          y={obj.y - border.width}
+          width={obj.width + border.width * 2}
+          height={obj.height + border.width * 2}
+          fill={border.color}
+          cornerRadius={(obj.cornerRadius ?? 0) + border.width}
+          rotation={obj.rotation ?? 0}
+          listening={false}
+        />
+      )}
+      <KonvaImage
+        ref={refSetter(obj.id) as React.LegacyRef<Konva.Image>}
+        image={image}
+        x={obj.x}
+        y={obj.y}
+        width={obj.width}
+        height={obj.height}
+        rotation={obj.rotation ?? 0}
+        opacity={obj.imgOpacity ?? 1}
+        cornerRadius={obj.cornerRadius ?? 0}
+        filters={getFilters()}
+        blurRadius={filters.blur}
+        brightness={(filters.brightness - 100) / 100}
+        contrast={(filters.contrast - 100) / 100}
+        draggable={!readOnly}
+        {...shadowProps(obj)}
+        {...commonEvents(obj.id)}
+      />
+    </React.Fragment>
+  );
+}
