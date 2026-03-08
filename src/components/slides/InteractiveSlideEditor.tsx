@@ -14,7 +14,7 @@ interface InteractiveSlideEditorProps {
  * dragging, resizing, and inline text editing.
  */
 export function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorProps) {
-  const { selectedObjectIds, selectObjects, clearSelection, updateObject, deleteObject } = usePresentationStore();
+  const { selectedObjectIds, selectObjects, clearSelection, updateObject, deleteObject, moveObject, rotateObject, duplicateObject, bringToFront, sendToBack } = usePresentationStore();
   const [dragState, setDragState] = useState<{
     objectId: string;
     startX: number;
