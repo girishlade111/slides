@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
+import LZString from 'lz-string';
 import {
   Presentation,
   Slide,
@@ -11,6 +12,32 @@ import {
 
 const MAX_HISTORY = 20;
 const AUTOSAVE_KEY = 'lade-slides-presentation';
+const AUTOSAVE_DEBOUNCE_MS = 3000;
+
+// Compressed persistence helpers
+function saveCompressed(key: string, data: unknown): void {
+  try {
+    const json = JSON.stringify(data);
+    const compressed = LZString.compressToUTF16(json);
+    localStorage.setItem(key, compressed);
+  } catch (e) {
+    console.warn('Auto-save failed:', e);
+  }
+}
+
+function loadCompressed<T>(key: string): T | null {
+  try {
+    const compressed = localStorage.getItem(key);
+    if (!compressed) return null;
+    // Try decompressing first (new format)
+    const json = LZString.decompressFromUTF16(compressed);
+    if (json) return JSON.parse(json) as T;
+    // Fallback: try raw JSON (old format migration)
+    return JSON.parse(compressed) as T;
+  } catch {
+    return null;
+  }
+}
 
 interface PresentationStore {
   // Core state
@@ -86,15 +113,10 @@ export const usePresentationStore = create<PresentationStore>()(
     };
 
     const autoSave = () => {
-      // Debounced auto-save triggered by subscribers
       set({ isSaving: true });
       const { presentation } = get();
-      try {
-        localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(presentation));
-        set({ isSaving: false, lastSavedAt: Date.now() });
-      } catch {
-        set({ isSaving: false });
-      }
+      saveCompressed(AUTOSAVE_KEY, presentation);
+      set({ isSaving: false, lastSavedAt: Date.now() });
     };
 
     return {
@@ -571,24 +593,18 @@ export const usePresentationStore = create<PresentationStore>()(
       },
 
       loadFromLocalStorage: () => {
-        try {
-          const data = localStorage.getItem(AUTOSAVE_KEY);
-          if (!data) return false;
-          const presentation = JSON.parse(data) as Presentation;
-          if (presentation && presentation.slides && presentation.slides.length > 0) {
-            set({
-              presentation,
-              currentSlideIndex: 0,
-              selectedObjectIds: [],
-              history: { past: [], future: [] },
-              lastSavedAt: Date.now(),
-            });
-            return true;
-          }
-          return false;
-        } catch {
-          return false;
+        const presentation = loadCompressed<Presentation>(AUTOSAVE_KEY);
+        if (presentation && presentation.slides && presentation.slides.length > 0) {
+          set({
+            presentation,
+            currentSlideIndex: 0,
+            selectedObjectIds: [],
+            history: { past: [], future: [] },
+            lastSavedAt: Date.now(),
+          });
+          return true;
         }
+        return false;
       },
 
       newPresentation: () => {
@@ -603,4 +619,18 @@ export const usePresentationStore = create<PresentationStore>()(
       },
     };
   })
+);
+
+// Debounced auto-save: saves 3s after last presentation change
+let autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
+usePresentationStore.subscribe(
+  (state) => state.presentation,
+  (presentation) => {
+    if (autoSaveTimer) clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(() => {
+      saveCompressed(AUTOSAVE_KEY, presentation);
+      usePresentationStore.setState({ isSaving: false, lastSavedAt: Date.now() });
+    }, AUTOSAVE_DEBOUNCE_MS);
+    usePresentationStore.setState({ isSaving: true });
+  }
 );
