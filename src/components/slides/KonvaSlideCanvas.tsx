@@ -336,3 +336,119 @@ function SlideImageObject({ obj, readOnly, refSetter, commonEvents, shadowProps 
     </React.Fragment>
   );
 }
+
+// Background layer component
+function SlideBackgroundLayer({ background, readOnly }: { background?: SlideBackground; readOnly: boolean }) {
+  const cr = readOnly ? 0 : 8;
+
+  if (!background || background.type === 'color') {
+    return <Rect x={0} y={0} width={CANVAS_W} height={CANVAS_H} fill={background?.color ?? '#ffffff'} cornerRadius={cr} listening={false} />;
+  }
+
+  if (background.type === 'gradient' && background.gradient) {
+    const { stops, type: gType, angle } = background.gradient;
+    // Use a canvas-rendered gradient via Konva sceneFunc
+    return (
+      <Rect
+        x={0} y={0} width={CANVAS_W} height={CANVAS_H}
+        cornerRadius={cr}
+        listening={false}
+        sceneFunc={(context, shape) => {
+          const ctx = context._context;
+          let grad: CanvasGradient;
+          if (gType === 'radial') {
+            grad = ctx.createRadialGradient(CANVAS_W / 2, CANVAS_H / 2, 0, CANVAS_W / 2, CANVAS_H / 2, Math.max(CANVAS_W, CANVAS_H) / 2);
+          } else {
+            const a = gType === 'diagonal-lr' ? 135 : gType === 'diagonal-rl' ? 225 : angle;
+            const rad = (a * Math.PI) / 180;
+            const cx = CANVAS_W / 2, cy = CANVAS_H / 2;
+            const len = Math.max(CANVAS_W, CANVAS_H);
+            grad = ctx.createLinearGradient(
+              cx - Math.cos(rad) * len / 2, cy - Math.sin(rad) * len / 2,
+              cx + Math.cos(rad) * len / 2, cy + Math.sin(rad) * len / 2
+            );
+          }
+          stops.forEach((s) => {
+            try { grad.addColorStop(s.position / 100, s.color); } catch {}
+          });
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.rect(0, 0, CANVAS_W, CANVAS_H);
+          ctx.fill();
+          context.fillStrokeShape(shape);
+        }}
+      />
+    );
+  }
+
+  if (background.type === 'image' && background.image) {
+    return <BackgroundImage src={background.image.src} opacity={background.image.opacity} readOnly={readOnly} />;
+  }
+
+  if (background.type === 'pattern' && background.pattern) {
+    // Render pattern via sceneFunc
+    const { type: pType, color: pColor, backgroundColor: pBg, scale: pScale } = background.pattern;
+    return (
+      <React.Fragment>
+        <Rect x={0} y={0} width={CANVAS_W} height={CANVAS_H} fill={pBg} cornerRadius={cr} listening={false} />
+        <Rect
+          x={0} y={0} width={CANVAS_W} height={CANVAS_H}
+          cornerRadius={cr}
+          listening={false}
+          sceneFunc={(context, shape) => {
+            const ctx = context._context;
+            const s = 20 * pScale;
+            ctx.save();
+            ctx.strokeStyle = pColor;
+            ctx.fillStyle = pColor;
+            ctx.lineWidth = 1;
+            if (pType === 'dots') {
+              for (let x = s / 2; x < CANVAS_W; x += s) {
+                for (let y = s / 2; y < CANVAS_H; y += s) {
+                  ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI * 2); ctx.fill();
+                }
+              }
+            } else if (pType === 'grid') {
+              for (let x = 0; x < CANVAS_W; x += s) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, CANVAS_H); ctx.stroke(); }
+              for (let y = 0; y < CANVAS_H; y += s) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CANVAS_W, y); ctx.stroke(); }
+            } else if (pType === 'horizontal-stripes') {
+              for (let y = 0; y < CANVAS_H; y += s) { ctx.fillRect(0, y, CANVAS_W, 2); }
+            } else if (pType === 'vertical-stripes') {
+              for (let x = 0; x < CANVAS_W; x += s) { ctx.fillRect(x, 0, 2, CANVAS_H); }
+            } else if (pType === 'diagonal-stripes') {
+              ctx.beginPath();
+              for (let i = -CANVAS_H; i < CANVAS_W + CANVAS_H; i += s) {
+                ctx.moveTo(i, 0); ctx.lineTo(i + CANVAS_H, CANVAS_H);
+              }
+              ctx.stroke();
+            } else if (pType === 'checkerboard') {
+              for (let x = 0; x < CANVAS_W; x += s) {
+                for (let y = 0; y < CANVAS_H; y += s) {
+                  if (((x / s) + (y / s)) % 2 === 0) ctx.fillRect(x, y, s, s);
+                }
+              }
+            }
+            ctx.restore();
+            context.fillStrokeShape(shape);
+          }}
+        />
+      </React.Fragment>
+    );
+  }
+
+  return <Rect x={0} y={0} width={CANVAS_W} height={CANVAS_H} fill="#ffffff" cornerRadius={cr} listening={false} />;
+}
+
+function BackgroundImage({ src, opacity, readOnly }: { src: string; opacity: number; readOnly: boolean }) {
+  const [image] = useImage(src, 'anonymous');
+  if (!image) return <Rect x={0} y={0} width={CANVAS_W} height={CANVAS_H} fill="#ffffff" cornerRadius={readOnly ? 0 : 8} listening={false} />;
+  return (
+    <KonvaImage
+      image={image}
+      x={0} y={0}
+      width={CANVAS_W} height={CANVAS_H}
+      opacity={opacity / 100}
+      listening={false}
+    />
+  );
+}
