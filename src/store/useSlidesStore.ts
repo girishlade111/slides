@@ -1,8 +1,10 @@
 import { create } from 'zustand';
 import { slides as initialSlides, createObject } from '@/data/slides';
 import type { SlideData, SlideObject } from '@/data/slides';
+import { loadFromStorage } from '@/lib/storage';
 
-let slideCounter = initialSlides.length;
+const stored = loadFromStorage();
+let slideCounter = (stored?.slides ?? initialSlides).length;
 
 interface SlidesState {
   slides: SlideData[];
@@ -31,8 +33,8 @@ interface SlidesState {
 }
 
 export const useSlidesStore = create<SlidesState>((set, get) => ({
-  slides: initialSlides,
-  currentIndex: 0,
+  slides: stored?.slides ?? initialSlides,
+  currentIndex: stored?.currentIndex ?? 0,
   selectedObjectId: null,
 
   setCurrentIndex: (index) => set({ currentIndex: index, selectedObjectId: null }),
