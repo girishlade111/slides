@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { PPTTitleBar } from '@/components/layout/PPTTitleBar';
 import { PPTRibbon } from '@/components/layout/PPTRibbon';
 import { PPTSidebar } from '@/components/layout/PPTSidebar';
@@ -10,12 +10,12 @@ import { PresentationMode } from '@/components/slides/PresentationMode';
 import { PresenterView } from '@/components/slides/PresenterView';
 import { PresenterNotesPanel } from '@/components/slides/PresenterNotesPanel';
 import { DynamicSlideRenderer } from '@/components/slides/DynamicSlideRenderer';
+import { InteractiveSlideEditor } from '@/components/slides/InteractiveSlideEditor';
 import { usePresentationStore } from '@/store/presentationStore';
 import { showcaseSlides } from '@/slides/showcase';
 import { toast } from '@/hooks/use-toast';
 
 export default function Index() {
-  // Store
   const store = usePresentationStore();
   const {
     presentation,
@@ -31,7 +31,6 @@ export default function Index() {
     loadFromLocalStorage,
   } = store;
 
-  // UI state (not persisted)
   const [showGrid, setShowGrid] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
@@ -43,15 +42,14 @@ export default function Index() {
   const [sidebarWidth, setSidebarWidth] = useState(220);
   const [useShowcaseSlides, setUseShowcaseSlides] = useState(true);
 
-  // Load saved presentation on mount
+  // Track canvas scale for interactive editor
+  const [canvasScale, setCanvasScale] = useState(1);
+
   useEffect(() => {
     const loaded = loadFromLocalStorage();
-    if (loaded) {
-      setUseShowcaseSlides(false);
-    }
+    if (loaded) setUseShowcaseSlides(false);
   }, []);
 
-  // Showcase slides for demo mode
   const showcaseSlidesData = React.useMemo(() =>
     showcaseSlides.map((s) => ({
       id: `showcase-${s.name.toLowerCase().replace(/\s+/g, '-')}`,
@@ -63,11 +61,11 @@ export default function Index() {
     []
   );
 
-  // Current slides to display
   const slides = presentation.slides;
   const currentSlide = slides[currentSlideIndex];
   const currentSlideId = currentSlide?.id ?? null;
   const totalSlides = useShowcaseSlides ? showcaseSlidesData.length : slides.length;
+  const isEditable = !useShowcaseSlides;
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDarkMode);
@@ -81,78 +79,48 @@ export default function Index() {
 
       const ctrl = e.ctrlKey || e.metaKey;
 
-      // Ctrl+Z: Undo
-      if (ctrl && e.key === 'z' && !e.shiftKey) {
-        e.preventDefault();
-        undo();
-        return;
-      }
-      // Ctrl+Y or Ctrl+Shift+Z: Redo
-      if ((ctrl && e.key === 'y') || (ctrl && e.shiftKey && e.key === 'z')) {
-        e.preventDefault();
-        redo();
-        return;
-      }
-      // Ctrl+S: Save
+      if (ctrl && e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); return; }
+      if ((ctrl && e.key === 'y') || (ctrl && e.shiftKey && e.key === 'z')) { e.preventDefault(); redo(); return; }
       if (ctrl && e.key === 's') {
         e.preventDefault();
         saveToLocalStorage();
-        toast({ title: 'Saved', description: 'Presentation saved successfully.' });
+        toast({ title: 'Saved', description: 'Presentation saved.' });
         return;
       }
-      // Ctrl+D: Duplicate slide
+      if (ctrl && e.key === 'c') { e.preventDefault(); store.copyObjects(); return; }
+      if (ctrl && e.key === 'v') { e.preventDefault(); store.pasteObjects(); return; }
+      if (ctrl && e.key === 'x') { e.preventDefault(); store.cutObjects(); return; }
       if (ctrl && e.key === 'd') {
         e.preventDefault();
-        if (!useShowcaseSlides && currentSlide) {
-          duplicateSlide(currentSlide.id);
-          toast({ title: 'Slide duplicated' });
-        }
-        return;
-      }
-      // Delete: Delete current slide
-      if (e.key === 'Delete' && !ctrl && slides.length > 1 && !useShowcaseSlides && currentSlide) {
-        e.preventDefault();
-        deleteSlide(currentSlide.id);
-        toast({ title: 'Slide deleted' });
+        if (isEditable && currentSlide) { duplicateSlide(currentSlide.id); toast({ title: 'Slide duplicated' }); }
         return;
       }
 
-      // Arrow navigation
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+        if (store.selectedObjectIds.length > 0) return; // Let object move handle it
         e.preventDefault();
-        if (useShowcaseSlides) {
-          setCurrentSlideIndex(Math.min(showcaseSlidesData.length - 1, currentSlideIndex + 1));
-        } else {
-          store.navigateSlide('next');
-        }
+        if (useShowcaseSlides) setCurrentSlideIndex(Math.min(showcaseSlidesData.length - 1, currentSlideIndex + 1));
+        else store.navigateSlide('next');
       } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+        if (store.selectedObjectIds.length > 0) return;
         e.preventDefault();
-        if (useShowcaseSlides) {
-          setCurrentSlideIndex(Math.max(0, currentSlideIndex - 1));
-        } else {
-          store.navigateSlide('prev');
-        }
+        if (useShowcaseSlides) setCurrentSlideIndex(Math.max(0, currentSlideIndex - 1));
+        else store.navigateSlide('prev');
       } else if (e.key === 'G' && e.shiftKey && !ctrl) {
-        e.preventDefault();
-        setShowGrid(prev => !prev);
+        e.preventDefault(); setShowGrid((prev) => !prev);
       } else if (e.key === 'N' && e.shiftKey && !ctrl) {
-        e.preventDefault();
-        setShowNotes(prev => !prev);
+        e.preventDefault(); setShowNotes((prev) => !prev);
       } else if (e.key === 'F5') {
-        e.preventDefault();
-        setIsPresentationMode(true);
+        e.preventDefault(); setIsPresentationMode(true);
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentSlideIndex, slides.length, isPresentationMode, isPresenterView, useShowcaseSlides, currentSlide]);
+  }, [currentSlideIndex, slides.length, isPresentationMode, isPresenterView, useShowcaseSlides, currentSlide, isEditable]);
 
-  // Handle adding a new slide (switches from showcase to editable mode)
   const handleAddSlide = useCallback(() => {
     if (useShowcaseSlides) {
       setUseShowcaseSlides(false);
-      // The store already has a default slide
       toast({ title: 'New presentation', description: 'Started a new editable presentation.' });
     } else {
       addSlide();
@@ -163,7 +131,7 @@ export default function Index() {
   const handleDeleteSlide = useCallback((slideId: string) => {
     if (useShowcaseSlides) return;
     if (slides.length <= 1) {
-      toast({ title: "Can't delete", description: 'Presentation must have at least one slide.', variant: 'destructive' });
+      toast({ title: "Can't delete", description: 'Need at least one slide.', variant: 'destructive' });
       return;
     }
     deleteSlide(slideId);
@@ -176,25 +144,14 @@ export default function Index() {
     toast({ title: 'Slide duplicated' });
   }, [useShowcaseSlides, duplicateSlide]);
 
-  // Build sidebar data
+  // Sidebar slide data
   const sidebarSlides = useShowcaseSlides
-    ? showcaseSlidesData.map((s) => ({
-        id: s.id,
-        content: <s.component />,
-      }))
-    : slides.map((slide) => ({
-        id: slide.id,
-        content: <DynamicSlideRenderer slide={slide} />,
-      }));
+    ? showcaseSlidesData.map((s) => ({ id: s.id, content: <s.component /> }))
+    : slides.map((slide) => ({ id: slide.id, content: <DynamicSlideRenderer slide={slide} /> }));
 
-  // Build presentation/presenter mode slide data
+  // Mode slides
   const modeSlides = useShowcaseSlides
-    ? showcaseSlidesData.map((s) => ({
-        id: s.id,
-        component: s.component,
-        isWIP: false,
-        description: undefined,
-      }))
+    ? showcaseSlidesData.map((s) => ({ id: s.id, component: s.component, isWIP: false, description: undefined }))
     : slides.map((slide) => ({
         id: slide.id,
         component: () => <DynamicSlideRenderer slide={slide} />,
@@ -202,14 +159,14 @@ export default function Index() {
         description: slide.notes || undefined,
       }));
 
-  // Current slide component
+  // Current slide content — interactive editor for editable mode
   const CurrentSlideContent = useShowcaseSlides
     ? (() => {
         const Comp = showcaseSlidesData[currentSlideIndex]?.component || showcaseSlidesData[0].component;
         return <Comp />;
       })()
     : currentSlide
-      ? <DynamicSlideRenderer slide={currentSlide} />
+      ? <InteractiveSlideEditor slide={currentSlide} scale={canvasScale} />
       : null;
 
   return (
@@ -218,17 +175,15 @@ export default function Index() {
 
       <PPTRibbon
         showGrid={showGrid}
-        onToggleGrid={() => {
-          const newShowGrid = !showGrid;
-          setShowGrid(newShowGrid);
-          if (newShowGrid) setShowSidebar(false);
-        }}
+        onToggleGrid={() => { setShowGrid(!showGrid); if (!showGrid) setShowSidebar(false); }}
         showNotes={showNotes}
         onToggleNotes={() => setShowNotes(!showNotes)}
         isDarkMode={isDarkMode}
         onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
         onStartPresentation={() => setIsPresentationMode(true)}
         onStartPresenterView={() => setIsPresenterView(true)}
+        onAddSlide={handleAddSlide}
+        isEditable={isEditable}
       />
 
       <div className="flex-1 flex overflow-hidden">
@@ -241,7 +196,7 @@ export default function Index() {
             onDeleteSlide={handleDeleteSlide}
             onDuplicateSlide={handleDuplicateSlide}
             onReorderSlides={useShowcaseSlides ? undefined : reorderSlides}
-            canDeleteSlide={!useShowcaseSlides && slides.length > 1}
+            canDeleteSlide={isEditable && slides.length > 1}
             width={sidebarWidth}
             onWidthChange={setSidebarWidth}
             onResizeStart={() => {}}
@@ -259,18 +214,12 @@ export default function Index() {
               currentSlide={currentSlideIndex + 1}
               totalSlides={totalSlides}
               onPrevSlide={() => {
-                if (useShowcaseSlides) {
-                  setCurrentSlideIndex(Math.max(0, currentSlideIndex - 1));
-                } else {
-                  store.navigateSlide('prev');
-                }
+                if (useShowcaseSlides) setCurrentSlideIndex(Math.max(0, currentSlideIndex - 1));
+                else store.navigateSlide('prev');
               }}
               onNextSlide={() => {
-                if (useShowcaseSlides) {
-                  setCurrentSlideIndex(Math.min(totalSlides - 1, currentSlideIndex + 1));
-                } else {
-                  store.navigateSlide('next');
-                }
+                if (useShowcaseSlides) setCurrentSlideIndex(Math.min(totalSlides - 1, currentSlideIndex + 1));
+                else store.navigateSlide('next');
               }}
             >
               {CurrentSlideContent}
@@ -280,12 +229,7 @@ export default function Index() {
               <SlideOverviewGrid
                 slides={useShowcaseSlides
                   ? showcaseSlidesData
-                  : slides.map((s) => ({
-                      id: s.id,
-                      component: () => <DynamicSlideRenderer slide={s} />,
-                      name: s.name,
-                      isWIP: false,
-                    }))
+                  : slides.map((s) => ({ id: s.id, component: () => <DynamicSlideRenderer slide={s} />, name: s.name, isWIP: false }))
                 }
                 activeSlideIndex={currentSlideIndex}
                 onSlideClick={setCurrentSlideIndex}
@@ -303,9 +247,7 @@ export default function Index() {
           )}
         </div>
 
-        {showProperties && (
-          <PropertiesPanel onClose={() => setShowProperties(false)} />
-        )}
+        {showProperties && <PropertiesPanel onClose={() => setShowProperties(false)} />}
       </div>
 
       <PPTStatusBar
@@ -328,7 +270,6 @@ export default function Index() {
           onExit={() => setIsPresentationMode(false)}
         />
       )}
-
       {isPresenterView && (
         <PresenterView
           slides={modeSlides}
