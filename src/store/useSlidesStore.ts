@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { slides as initialSlides, createObject } from '@/data/slides';
-import type { SlideData, SlideObject } from '@/data/slides';
+import type { SlideData, SlideObject, SlideBackground } from '@/data/slides';
 import {
   loadFromStorage, saveToStorage, clearStorage,
   loadPresentation, savePresentation, deletePresentation as deletePresentationFromStorage,
