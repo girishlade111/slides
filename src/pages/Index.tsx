@@ -4,6 +4,7 @@ import { SlideEditor } from '@/components/SlideEditor';
 import { FileMenu } from '@/components/FileMenu';
 import { SlideSidebar } from '@/components/SlideSidebar';
 import { ShapesMenu } from '@/components/ShapesMenu';
+import { ImageMenu } from '@/components/ImageMenu';
 import { TextFormattingToolbar } from '@/components/TextFormattingToolbar';
 import { KonvaSlideCanvas, type KonvaSlideCanvasHandle } from '@/components/slides/KonvaSlideCanvas';
 import { PresentationOverlay } from '@/components/slides/PresentationOverlay';
