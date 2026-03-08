@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { slides } from '@/data/slides';
+import { slides as initialSlides } from '@/data/slides';
+import type { SlideData } from '@/data/slides';
 import { SlideView } from '@/components/SlideView';
 import { SlideList } from '@/components/SlideList';
 
 export default function Index() {
+  const [slides, setSlides] = useState<SlideData[]>(initialSlides);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const totalSlides = slides.length;
@@ -17,6 +19,22 @@ export default function Index() {
     setCurrentIndex((i) => Math.min(totalSlides - 1, i + 1));
   }, [totalSlides]);
 
+  const handleReorder = useCallback((fromIndex: number, toIndex: number) => {
+    setSlides((prev) => {
+      const updated = [...prev];
+      const [moved] = updated.splice(fromIndex, 1);
+      updated.splice(toIndex, 0, moved);
+      return updated;
+    });
+    // Keep selection following the moved slide
+    setCurrentIndex((prev) => {
+      if (prev === fromIndex) return toIndex;
+      if (fromIndex < prev && toIndex >= prev) return prev - 1;
+      if (fromIndex > prev && toIndex <= prev) return prev + 1;
+      return prev;
+    });
+  }, []);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight') handleNext();
@@ -28,14 +46,13 @@ export default function Index() {
 
   return (
     <div className="h-screen flex bg-background">
-      {/* Sidebar */}
       <SlideList
         slides={slides}
         currentIndex={currentIndex}
         onSelect={setCurrentIndex}
+        onReorder={handleReorder}
       />
 
-      {/* Main area */}
       <div className="flex-1 flex flex-col">
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="w-full max-w-3xl bg-card rounded-2xl shadow-lg border border-border flex flex-col overflow-hidden">
