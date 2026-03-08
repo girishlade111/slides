@@ -256,6 +256,16 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
     }));
   },
 
+  addTextBox: (slideId) => {
+    const newObj = createObject('body', 'Text', { x: 400, y: 250, width: 300, height: 60, fontSize: 22 });
+    set((state) => ({
+      slides: state.slides.map((s) =>
+        s.id === slideId ? { ...s, objects: [...s.objects, newObj] } : s
+      ),
+      selectedObjectId: newObj.id,
+    }));
+  },
+
   addShape: (shapeType) => {
     const { slides, currentIndex } = get();
     const slide = slides[currentIndex];

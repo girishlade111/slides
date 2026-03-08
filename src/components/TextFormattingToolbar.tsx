@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import {
   Bold, Italic, Underline, Strikethrough,
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  List, ListOrdered, IndentIncrease, IndentDecrease,
+  List, ListOrdered,
   Type, Palette,
 } from 'lucide-react';
 import { useState, useRef, useEffect, useCallback } from 'react';
