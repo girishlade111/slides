@@ -135,6 +135,7 @@ export default function Index() {
             <Plus className="w-3 h-3" />
             Text Box
           </button>
+          <ShapesMenu />
           <button
             onClick={() => setPresenting(true)}
             className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
