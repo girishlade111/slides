@@ -1,9 +1,8 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { Check, Loader2, Play } from 'lucide-react';
-import { SlideList } from '@/components/SlideList';
 import { SlideEditor } from '@/components/SlideEditor';
-import { SlideActions } from '@/components/SlideActions';
 import { FileMenu } from '@/components/FileMenu';
+import { SlideSidebar } from '@/components/SlideSidebar';
 import { KonvaSlideCanvas, type KonvaSlideCanvasHandle } from '@/components/slides/KonvaSlideCanvas';
 import { PresentationOverlay } from '@/components/slides/PresentationOverlay';
 import { OpenPresentationDialog } from '@/components/dialogs/OpenPresentationDialog';
@@ -15,10 +14,8 @@ import { saveToStorage } from '@/lib/storage';
 
 export default function Index() {
   const {
-    slides, currentIndex, setCurrentIndex, presentationMeta,
-    goNext, goPrev,
-    addSlide, deleteSlide, moveSlideUp, moveSlideDown,
-    reorderSlides, saveCurrent,
+    slides, currentIndex, presentationMeta,
+    goNext, goPrev, saveCurrent,
   } = useSlidesStore();
 
   const currentSlide = slides[currentIndex];
@@ -29,7 +26,6 @@ export default function Index() {
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
   const [presenting, setPresenting] = useState(false);
 
-  // Dialog states
   const [showNew, setShowNew] = useState(false);
   const [showOpen, setShowOpen] = useState(false);
   const [showSaveAs, setShowSaveAs] = useState(false);
@@ -63,8 +59,7 @@ export default function Index() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [goNext, goPrev, presenting, saveCurrent]);
 
-  const handleExportAllPng = useCallback(async () => {
-    // Export current slide as PNG for now (multi-slide would need off-screen rendering)
+  const handleExportPng = useCallback(() => {
     const stage = canvasRef.current?.getStage();
     if (!stage) return;
     const dataUrl = stage.toDataURL({ mimeType: 'image/png', pixelRatio: 2 });
@@ -91,7 +86,7 @@ export default function Index() {
             onOpen={() => setShowOpen(true)}
             onSave={saveCurrent}
             onSaveAs={() => setShowSaveAs(true)}
-            onExportPng={handleExportAllPng}
+            onExportPng={handleExportPng}
             onSettings={() => setShowSettings(true)}
             onClose={handleClose}
             presentationName={displayName}
@@ -116,24 +111,10 @@ export default function Index() {
 
       {/* Main layout */}
       <div className="flex-1 flex min-h-0">
-        <div className="w-60 flex flex-col border-r border-border">
-          <SlideActions
-            onAdd={addSlide}
-            onDelete={deleteSlide}
-            onMoveUp={moveSlideUp}
-            onMoveDown={moveSlideDown}
-            canDelete={totalSlides > 1}
-            canMoveUp={currentIndex > 0}
-            canMoveDown={currentIndex < totalSlides - 1}
-          />
-          <SlideList
-            slides={slides}
-            currentIndex={currentIndex}
-            onSelect={setCurrentIndex}
-            onReorder={reorderSlides}
-          />
-        </div>
+        {/* Thumbnail sidebar */}
+        <SlideSidebar />
 
+        {/* Canvas area */}
         <div className="flex-1 flex flex-col">
           <div className="flex-1 flex items-center justify-center p-6 bg-muted/20">
             <KonvaSlideCanvas ref={canvasRef} slide={currentSlide} />
@@ -160,6 +141,7 @@ export default function Index() {
           </div>
         </div>
 
+        {/* Properties panel */}
         <SlideEditor />
       </div>
 
