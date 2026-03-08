@@ -85,9 +85,30 @@ export function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorP
     });
   }, [scale]);
 
-  // Mouse move handler for drag/resize
+  // Rotation handle
+  const handleRotateMouseDown = useCallback((e: React.MouseEvent, obj: SlideObject) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (obj.locked) return;
+
+    const rect = (e.target as HTMLElement).closest('[data-object-wrapper]')?.getBoundingClientRect();
+    if (!rect) return;
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const startAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
+
+    setRotateState({
+      objectId: obj.id,
+      centerX,
+      centerY,
+      startAngle,
+      startRotation: obj.rotation,
+    });
+  }, []);
+
+  // Mouse move handler for drag/resize/rotate
   useEffect(() => {
-    if (!dragState && !resizeState) return;
+    if (!dragState && !resizeState && !rotateState) return;
 
     const handleMouseMove = (e: MouseEvent) => {
       if (dragState) {
@@ -119,11 +140,21 @@ export function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorP
           position: { x: Math.round(newX), y: Math.round(newY) },
         });
       }
+      if (rotateState) {
+        const currentAngle = Math.atan2(e.clientY - rotateState.centerY, e.clientX - rotateState.centerX) * (180 / Math.PI);
+        let newRotation = rotateState.startRotation + (currentAngle - rotateState.startAngle);
+        // Snap to 15-degree increments when holding Shift
+        if (e.shiftKey) {
+          newRotation = Math.round(newRotation / 15) * 15;
+        }
+        rotateObject(slide.id, rotateState.objectId, newRotation);
+      }
     };
 
     const handleMouseUp = () => {
       setDragState(null);
       setResizeState(null);
+      setRotateState(null);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -132,7 +163,7 @@ export function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorP
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [dragState, resizeState, scale, slide.id, updateObject]);
+  }, [dragState, resizeState, rotateState, scale, slide.id, updateObject, rotateObject]);
 
   // Double-click to edit text
   const handleDoubleClick = useCallback((e: React.MouseEvent, obj: SlideObject) => {
@@ -142,19 +173,59 @@ export function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorP
     }
   }, []);
 
-  // Handle keyboard on selected objects
+  // Handle keyboard on selected objects (delete, arrow nudge, layer ordering, duplicate)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (editingTextId) return; // Don't handle when editing text
+      if (editingTextId) return;
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (selectedObjectIds.length === 0) return;
 
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        selectedObjectIds.forEach((id) => deleteObject(slide.id, id));
+      const step = e.shiftKey ? 10 : 1;
+
+      switch (e.key) {
+        case 'Delete':
+        case 'Backspace':
+          selectedObjectIds.forEach((id) => deleteObject(slide.id, id));
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          selectedObjectIds.forEach((id) => moveObject(slide.id, id, 0, -step));
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          selectedObjectIds.forEach((id) => moveObject(slide.id, id, 0, step));
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          selectedObjectIds.forEach((id) => moveObject(slide.id, id, -step, 0));
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          selectedObjectIds.forEach((id) => moveObject(slide.id, id, step, 0));
+          break;
+        case ']':
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            selectedObjectIds.forEach((id) => e.shiftKey ? bringToFront(slide.id, id) : usePresentationStore.getState().bringForward(slide.id, id));
+          }
+          break;
+        case '[':
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            selectedObjectIds.forEach((id) => e.shiftKey ? sendToBack(slide.id, id) : usePresentationStore.getState().sendBackward(slide.id, id));
+          }
+          break;
+        case 'd':
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            selectedObjectIds.forEach((id) => duplicateObject(slide.id, id));
+          }
+          break;
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedObjectIds, editingTextId, slide.id, deleteObject]);
+  }, [selectedObjectIds, editingTextId, slide.id, deleteObject, moveObject, duplicateObject, bringToFront, sendToBack]);
 
   const sortedObjects = [...slide.objects].sort((a, b) => a.zIndex - b.zIndex);
 
