@@ -300,19 +300,7 @@ interface SlideImageObjectProps {
 function SlideImageObject({ obj, readOnly, refSetter, commonEvents, shadowProps }: SlideImageObjectProps) {
   const [image] = useImage(obj.src ?? '', 'anonymous');
   
-  const filters = obj.filters ?? { grayscale: false, sepia: false, blur: 0, brightness: 100, contrast: 100, saturation: 100 };
   const border = obj.border ?? { enabled: false, color: '#1E40AF', width: 2 };
-  
-  // Build CSS filter string for Konva
-  const getFilters = (): Konva.Filter[] => {
-    const result: Konva.Filter[] = [];
-    if (filters.grayscale) result.push(Konva.Filters.Grayscale);
-    if (filters.sepia) result.push(Konva.Filters.Sepia);
-    if (filters.blur > 0) result.push(Konva.Filters.Blur);
-    if (filters.brightness !== 100) result.push(Konva.Filters.Brighten);
-    if (filters.contrast !== 100) result.push(Konva.Filters.Contrast);
-    return result;
-  };
 
   if (!image) return null;
 
@@ -341,10 +329,6 @@ function SlideImageObject({ obj, readOnly, refSetter, commonEvents, shadowProps 
         rotation={obj.rotation ?? 0}
         opacity={obj.imgOpacity ?? 1}
         cornerRadius={obj.cornerRadius ?? 0}
-        filters={getFilters()}
-        blurRadius={filters.blur}
-        brightness={(filters.brightness - 100) / 100}
-        contrast={(filters.contrast - 100) / 100}
         draggable={!readOnly}
         {...shadowProps(obj)}
         {...commonEvents(obj.id)}
