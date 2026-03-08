@@ -1,3 +1,4 @@
+import React from 'react';
 import { Stage, Layer, Rect, Text, Circle, Transformer } from 'react-konva';
 import type { SlideData } from '@/data/slides';
 import { useSlidesStore } from '@/store/useSlidesStore';
