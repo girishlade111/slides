@@ -50,6 +50,7 @@ interface SlidesState {
   updateObjectStyle: (slideId: string, objectId: string, style: Partial<SlideObject>) => void;
   setObjectPosition: (slideId: string, objectId: string, x: number, y: number) => void;
   addBodyObject: (slideId: string) => void;
+  addTextBox: (slideId: string) => void;
   addShape: (shapeType: 'rectangle' | 'circle') => void;
   deleteObject: (slideId: string, objectId: string) => void;
 
@@ -247,6 +248,16 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
     const slide = get().slides.find((s) => s.id === slideId);
     const yOffset = slide ? Math.max(...slide.objects.map((o) => o.y + o.height), 0) + 20 : 200;
     const newObj = createObject('body', '', { y: yOffset });
+    set((state) => ({
+      slides: state.slides.map((s) =>
+        s.id === slideId ? { ...s, objects: [...s.objects, newObj] } : s
+      ),
+      selectedObjectId: newObj.id,
+    }));
+  },
+
+  addTextBox: (slideId) => {
+    const newObj = createObject('body', 'Text', { x: 400, y: 250, width: 300, height: 60, fontSize: 22 });
     set((state) => ({
       slides: state.slides.map((s) =>
         s.id === slideId ? { ...s, objects: [...s.objects, newObj] } : s

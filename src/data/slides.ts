@@ -8,8 +8,15 @@ export interface SlideObject {
   height: number;
   fontSize?: number;
   fontFamily?: string;
-  align?: 'left' | 'center' | 'right';
+  align?: 'left' | 'center' | 'right' | 'justify';
   color?: string;
+  fontWeight?: 'normal' | 'bold';
+  fontStyle?: 'normal' | 'italic';
+  textDecoration?: 'none' | 'underline' | 'line-through';
+  backgroundColor?: string;
+  lineHeight?: number;
+  listStyle?: 'none' | 'bullet' | 'numbered';
+  rotation?: number;
   // Shape-specific
   shapeType?: 'rectangle' | 'circle';
   fill?: string;
