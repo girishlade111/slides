@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Check, Loader2, Play } from 'lucide-react';
+import { Check, Loader2, Play, Plus } from 'lucide-react';
 import { SlideEditor } from '@/components/SlideEditor';
 import { FileMenu } from '@/components/FileMenu';
 import { SlideSidebar } from '@/components/SlideSidebar';
+import { TextFormattingToolbar } from '@/components/TextFormattingToolbar';
 import { KonvaSlideCanvas, type KonvaSlideCanvasHandle } from '@/components/slides/KonvaSlideCanvas';
 import { PresentationOverlay } from '@/components/slides/PresentationOverlay';
 import { OpenPresentationDialog } from '@/components/dialogs/OpenPresentationDialog';
@@ -14,8 +15,8 @@ import { saveToStorage } from '@/lib/storage';
 
 export default function Index() {
   const {
-    slides, currentIndex, presentationMeta,
-    goNext, goPrev, saveCurrent,
+    slides, currentIndex, presentationMeta, selectedObjectId,
+    goNext, goPrev, saveCurrent, addTextBox, updateObjectStyle,
   } = useSlidesStore();
 
   const currentSlide = slides[currentIndex];
@@ -31,6 +32,11 @@ export default function Index() {
   const [showSaveAs, setShowSaveAs] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
+  const selectedObj = selectedObjectId && currentSlide
+    ? currentSlide.objects.find((o) => o.id === selectedObjectId)
+    : null;
+  const isTextSelected = selectedObj && selectedObj.type !== 'shape';
+
   // Auto-save
   useEffect(() => {
     setSaveStatus('saving');
@@ -42,22 +48,41 @@ export default function Index() {
     return () => clearTimeout(timerRef.current);
   }, [slides, currentIndex, presentationMeta]);
 
-  // Keyboard nav + save shortcut
+  // Keyboard shortcuts
   useEffect(() => {
     if (presenting) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
+
+      const mod = e.metaKey || e.ctrlKey;
+
+      if (mod && e.key === 's') { e.preventDefault(); saveCurrent(); return; }
+
+      // Text formatting shortcuts
+      if (mod && isTextSelected && currentSlide) {
+        const obj = selectedObj!;
+        const slideId = currentSlide.id;
+        if (e.key === 'b') { e.preventDefault(); updateObjectStyle(slideId, obj.id, { fontWeight: obj.fontWeight === 'bold' ? 'normal' : 'bold' }); return; }
+        if (e.key === 'i') { e.preventDefault(); updateObjectStyle(slideId, obj.id, { fontStyle: obj.fontStyle === 'italic' ? 'normal' : 'italic' }); return; }
+        if (e.key === 'u') { e.preventDefault(); updateObjectStyle(slideId, obj.id, { textDecoration: obj.textDecoration === 'underline' ? 'none' : 'underline' }); return; }
+        if (e.key === 'e') { e.preventDefault(); updateObjectStyle(slideId, obj.id, { align: 'center' }); return; }
+        if (e.key === 'l') { e.preventDefault(); updateObjectStyle(slideId, obj.id, { align: 'left' }); return; }
+        if (e.key === 'r') { e.preventDefault(); updateObjectStyle(slideId, obj.id, { align: 'right' }); return; }
+      }
+
+      // Delete selected object
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedObjectId && currentSlide) {
         e.preventDefault();
-        saveCurrent();
+        useSlidesStore.getState().deleteObject(currentSlide.id, selectedObjectId);
         return;
       }
+
       if (e.key === 'ArrowRight') goNext();
       if (e.key === 'ArrowLeft') goPrev();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [goNext, goPrev, presenting, saveCurrent]);
+  }, [goNext, goPrev, presenting, saveCurrent, isTextSelected, selectedObj, currentSlide, selectedObjectId, updateObjectStyle]);
 
   const handleExportPng = useCallback(() => {
     const stage = canvasRef.current?.getStage();
@@ -100,21 +125,36 @@ export default function Index() {
             )}
           </span>
         </div>
-        <button
-          onClick={() => setPresenting(true)}
-          className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-        >
-          <Play className="w-3 h-3" />
-          Present
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => currentSlide && addTextBox(currentSlide.id)}
+            className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md border border-border text-foreground hover:bg-muted transition-colors"
+            title="Insert Text Box"
+          >
+            <Plus className="w-3 h-3" />
+            Text Box
+          </button>
+          <button
+            onClick={() => setPresenting(true)}
+            className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            <Play className="w-3 h-3" />
+            Present
+          </button>
+        </div>
       </div>
+
+      {/* Formatting toolbar */}
+      {isTextSelected && currentSlide && (
+        <div className="px-2 py-1 border-b border-border bg-muted/20">
+          <TextFormattingToolbar obj={selectedObj!} slideId={currentSlide.id} />
+        </div>
+      )}
 
       {/* Main layout */}
       <div className="flex-1 flex min-h-0">
-        {/* Thumbnail sidebar */}
         <SlideSidebar />
 
-        {/* Canvas area */}
         <div className="flex-1 flex flex-col">
           <div className="flex-1 flex items-center justify-center p-6 bg-muted/20">
             <KonvaSlideCanvas ref={canvasRef} slide={currentSlide} />
@@ -141,11 +181,9 @@ export default function Index() {
           </div>
         </div>
 
-        {/* Properties panel */}
         <SlideEditor />
       </div>
 
-      {/* Overlays */}
       {presenting && (
         <PresentationOverlay slides={slides} startIndex={currentIndex} onClose={() => setPresenting(false)} />
       )}
