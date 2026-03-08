@@ -21,7 +21,7 @@ export const slides: SlideData[] = [
     id: '3',
     title: 'Keyboard Navigation',
     content:
-      'Press the Right Arrow key to go forward and the Left Arrow key to go back. It's that simple.',
+      "Press the Right Arrow key to go forward and the Left Arrow key to go back. It's that simple.",
   },
   {
     id: '4',
