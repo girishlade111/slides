@@ -3,6 +3,7 @@ import { slides as initialSlides } from '@/data/slides';
 import type { SlideData } from '@/data/slides';
 import { SlideView } from '@/components/SlideView';
 import { SlideList } from '@/components/SlideList';
+import { SlideEditor } from '@/components/SlideEditor';
 
 export default function Index() {
   const [slides, setSlides] = useState<SlideData[]>(initialSlides);
@@ -26,7 +27,6 @@ export default function Index() {
       updated.splice(toIndex, 0, moved);
       return updated;
     });
-    // Keep selection following the moved slide
     setCurrentIndex((prev) => {
       if (prev === fromIndex) return toIndex;
       if (fromIndex < prev && toIndex >= prev) return prev - 1;
@@ -41,6 +41,8 @@ export default function Index() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't navigate if user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.key === 'ArrowRight') handleNext();
       if (e.key === 'ArrowLeft') handlePrev();
     };
@@ -50,6 +52,7 @@ export default function Index() {
 
   return (
     <div className="h-screen flex bg-background">
+      {/* Left Sidebar */}
       <SlideList
         slides={slides}
         currentIndex={currentIndex}
@@ -57,6 +60,7 @@ export default function Index() {
         onReorder={handleReorder}
       />
 
+      {/* Center: Slide Preview */}
       <div className="flex-1 flex flex-col">
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="w-full max-w-3xl bg-card rounded-2xl shadow-lg border border-border flex flex-col overflow-hidden">
@@ -86,6 +90,9 @@ export default function Index() {
           </div>
         </div>
       </div>
+
+      {/* Right: Edit Panel */}
+      <SlideEditor slide={currentSlide} onChange={handleUpdateSlide} />
     </div>
   );
 }
