@@ -10,7 +10,7 @@ const typeLabels: Record<string, string> = {
 };
 
 export function SlideEditor() {
-  const { slides, currentIndex, selectedObjectId, updateObjectText, updateObjectStyle, addBodyObject, deleteObject } = useSlidesStore();
+  const { slides, currentIndex, selectedObjectId, addBodyObject } = useSlidesStore();
   const slide = slides[currentIndex];
   if (!slide) return null;
 
