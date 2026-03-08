@@ -37,7 +37,7 @@ export default function Index() {
   const selectedObj = selectedObjectId && currentSlide
     ? currentSlide.objects.find((o) => o.id === selectedObjectId)
     : null;
-  const isTextSelected = selectedObj && selectedObj.type !== 'shape';
+  const isTextSelected = selectedObj && selectedObj.type !== 'shape' && selectedObj.type !== 'image';
 
   // Auto-save
   useEffect(() => {
