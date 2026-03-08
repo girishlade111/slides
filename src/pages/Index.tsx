@@ -4,6 +4,9 @@ import type { SlideData } from '@/data/slides';
 import { SlideView } from '@/components/SlideView';
 import { SlideList } from '@/components/SlideList';
 import { SlideEditor } from '@/components/SlideEditor';
+import { SlideActions } from '@/components/SlideActions';
+
+let slideCounter = initialSlides.length;
 
 export default function Index() {
   const [slides, setSlides] = useState<SlideData[]>(initialSlides);
@@ -39,9 +42,39 @@ export default function Index() {
     setSlides((prev) => prev.map((s, i) => i === currentIndex ? { ...s, ...updates } : s));
   }, [currentIndex]);
 
+  const addSlide = useCallback(() => {
+    slideCounter++;
+    const newSlide: SlideData = {
+      id: Date.now().toString(),
+      title: `New Slide ${slideCounter}`,
+      content: '',
+    };
+    setSlides((prev) => {
+      const updated = [...prev];
+      updated.splice(currentIndex + 1, 0, newSlide);
+      return updated;
+    });
+    setCurrentIndex((i) => i + 1);
+  }, [currentIndex]);
+
+  const deleteSlide = useCallback(() => {
+    if (slides.length <= 1) return;
+    setSlides((prev) => prev.filter((_, i) => i !== currentIndex));
+    setCurrentIndex((i) => Math.min(i, slides.length - 2));
+  }, [currentIndex, slides.length]);
+
+  const moveSlideUp = useCallback(() => {
+    if (currentIndex === 0) return;
+    handleReorder(currentIndex, currentIndex - 1);
+  }, [currentIndex, handleReorder]);
+
+  const moveSlideDown = useCallback(() => {
+    if (currentIndex >= slides.length - 1) return;
+    handleReorder(currentIndex, currentIndex + 1);
+  }, [currentIndex, slides.length, handleReorder]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't navigate if user is typing in an input
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.key === 'ArrowRight') handleNext();
       if (e.key === 'ArrowLeft') handlePrev();
@@ -52,13 +85,24 @@ export default function Index() {
 
   return (
     <div className="h-screen flex bg-background">
-      {/* Left Sidebar */}
-      <SlideList
-        slides={slides}
-        currentIndex={currentIndex}
-        onSelect={setCurrentIndex}
-        onReorder={handleReorder}
-      />
+      {/* Left: Actions + Sidebar */}
+      <div className="w-60 flex flex-col border-r border-border">
+        <SlideActions
+          onAdd={addSlide}
+          onDelete={deleteSlide}
+          onMoveUp={moveSlideUp}
+          onMoveDown={moveSlideDown}
+          canDelete={slides.length > 1}
+          canMoveUp={currentIndex > 0}
+          canMoveDown={currentIndex < slides.length - 1}
+        />
+        <SlideList
+          slides={slides}
+          currentIndex={currentIndex}
+          onSelect={setCurrentIndex}
+          onReorder={handleReorder}
+        />
+      </div>
 
       {/* Center: Slide Preview */}
       <div className="flex-1 flex flex-col">

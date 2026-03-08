@@ -41,7 +41,7 @@ export function SlideList({ slides, currentIndex, onSelect, onReorder }: SlideLi
   };
 
   return (
-    <nav className="w-60 h-full bg-muted/50 border-r border-border overflow-y-auto py-3 px-2 flex flex-col gap-1">
+    <nav className="flex-1 bg-muted/50 overflow-y-auto py-3 px-2 flex flex-col gap-1">
       {slides.map((slide, index) => (
         <button
           key={slide.id}
