@@ -33,7 +33,13 @@ export function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorP
     startObjY: number;
   } | null>(null);
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
-
+  const [rotateState, setRotateState] = useState<{
+    objectId: string;
+    centerX: number;
+    centerY: number;
+    startAngle: number;
+    startRotation: number;
+  } | null>(null);
   const bgStyle = getBackgroundStyle(slide.background);
 
   // Handle clicking on empty canvas area
