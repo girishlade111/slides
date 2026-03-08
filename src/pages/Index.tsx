@@ -1,20 +1,24 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { RotateCcw, Check, Loader2, Play, Download } from 'lucide-react';
+import { Check, Loader2, Play } from 'lucide-react';
 import { SlideList } from '@/components/SlideList';
 import { SlideEditor } from '@/components/SlideEditor';
 import { SlideActions } from '@/components/SlideActions';
+import { FileMenu } from '@/components/FileMenu';
 import { KonvaSlideCanvas, type KonvaSlideCanvasHandle } from '@/components/slides/KonvaSlideCanvas';
 import { PresentationOverlay } from '@/components/slides/PresentationOverlay';
+import { OpenPresentationDialog } from '@/components/dialogs/OpenPresentationDialog';
+import { SaveAsDialog } from '@/components/dialogs/SaveAsDialog';
+import { NewPresentationDialog } from '@/components/dialogs/NewPresentationDialog';
+import { PresentationSettingsDialog } from '@/components/dialogs/PresentationSettingsDialog';
 import { useSlidesStore } from '@/store/useSlidesStore';
-import { saveToStorage, clearStorage } from '@/lib/storage';
-import { slides as defaultSlides } from '@/data/slides';
+import { saveToStorage } from '@/lib/storage';
 
 export default function Index() {
   const {
-    slides, currentIndex, setCurrentIndex,
+    slides, currentIndex, setCurrentIndex, presentationMeta,
     goNext, goPrev,
     addSlide, deleteSlide, moveSlideUp, moveSlideDown,
-    reorderSlides, setSlides,
+    reorderSlides, saveCurrent,
   } = useSlidesStore();
 
   const currentSlide = slides[currentIndex];
@@ -25,37 +29,42 @@ export default function Index() {
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
   const [presenting, setPresenting] = useState(false);
 
+  // Dialog states
+  const [showNew, setShowNew] = useState(false);
+  const [showOpen, setShowOpen] = useState(false);
+  const [showSaveAs, setShowSaveAs] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+
   // Auto-save
   useEffect(() => {
     setSaveStatus('saving');
     clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
-      saveToStorage({ slides, currentIndex });
+      saveToStorage({ id: presentationMeta?.id, slides, currentIndex, meta: presentationMeta ?? undefined });
       setSaveStatus('saved');
     }, 1500);
     return () => clearTimeout(timerRef.current);
-  }, [slides, currentIndex]);
+  }, [slides, currentIndex, presentationMeta]);
 
-  // Keyboard nav
+  // Keyboard nav + save shortcut
   useEffect(() => {
     if (presenting) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        saveCurrent();
+        return;
+      }
       if (e.key === 'ArrowRight') goNext();
       if (e.key === 'ArrowLeft') goPrev();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [goNext, goPrev, presenting]);
+  }, [goNext, goPrev, presenting, saveCurrent]);
 
-  const handleReset = () => {
-    if (!window.confirm('Reset to example slides? Your current work will be lost.')) return;
-    clearStorage();
-    setSlides(defaultSlides);
-    setCurrentIndex(0);
-  };
-
-  const handleExportPng = useCallback(() => {
+  const handleExportAllPng = useCallback(async () => {
+    // Export current slide as PNG for now (multi-slide would need off-screen rendering)
     const stage = canvasRef.current?.getStage();
     if (!stage) return;
     const dataUrl = stage.toDataURL({ mimeType: 'image/png', pixelRatio: 2 });
@@ -65,41 +74,44 @@ export default function Index() {
     a.click();
   }, [currentIndex]);
 
+  const handleClose = () => {
+    if (!window.confirm('Close presentation? Unsaved changes will be lost.')) return;
+    useSlidesStore.getState().closePresentation();
+  };
+
+  const displayName = presentationMeta?.name || 'Lade Slides';
+
   return (
     <div className="h-screen flex flex-col bg-background">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/30">
-        <span className="text-sm font-semibold text-foreground">Lade Slides</span>
-        <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+      <div className="flex items-center justify-between px-2 py-1.5 border-b border-border bg-muted/30">
+        <div className="flex items-center gap-1">
+          <FileMenu
+            onNew={() => setShowNew(true)}
+            onOpen={() => setShowOpen(true)}
+            onSave={saveCurrent}
+            onSaveAs={() => setShowSaveAs(true)}
+            onExportPng={handleExportAllPng}
+            onSettings={() => setShowSettings(true)}
+            onClose={handleClose}
+            presentationName={displayName}
+          />
+          <span className="text-sm font-medium text-foreground ml-1 truncate max-w-[200px]">{displayName}</span>
+          <span className="flex items-center gap-1 text-xs text-muted-foreground ml-2">
             {saveStatus === 'saving' ? (
-              <><Loader2 className="w-3 h-3 animate-spin" /> Saving...</>
+              <><Loader2 className="w-3 h-3 animate-spin" /> Saving</>
             ) : (
               <><Check className="w-3 h-3 text-green-500" /> Saved</>
             )}
           </span>
-          <button
-            onClick={handleExportPng}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border border-border text-muted-foreground hover:bg-muted transition-colors"
-          >
-            <Download className="w-3 h-3" />
-            Export PNG
-          </button>
-          <button
-            onClick={() => setPresenting(true)}
-            className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            <Play className="w-3 h-3" />
-            Present
-          </button>
-          <button
-            onClick={handleReset}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border border-border text-muted-foreground hover:bg-muted transition-colors"
-          >
-            <RotateCcw className="w-3 h-3" />
-            Reset
-          </button>
         </div>
+        <button
+          onClick={() => setPresenting(true)}
+          className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+        >
+          <Play className="w-3 h-3" />
+          Present
+        </button>
       </div>
 
       {/* Main layout */}
@@ -151,14 +163,15 @@ export default function Index() {
         <SlideEditor />
       </div>
 
-      {/* Presentation overlay */}
+      {/* Overlays */}
       {presenting && (
-        <PresentationOverlay
-          slides={slides}
-          startIndex={currentIndex}
-          onClose={() => setPresenting(false)}
-        />
+        <PresentationOverlay slides={slides} startIndex={currentIndex} onClose={() => setPresenting(false)} />
       )}
+
+      <NewPresentationDialog open={showNew} onOpenChange={setShowNew} />
+      <OpenPresentationDialog open={showOpen} onOpenChange={setShowOpen} />
+      <SaveAsDialog open={showSaveAs} onOpenChange={setShowSaveAs} />
+      <PresentationSettingsDialog open={showSettings} onOpenChange={setShowSettings} />
     </div>
   );
 }
