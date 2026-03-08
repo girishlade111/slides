@@ -620,3 +620,17 @@ export const usePresentationStore = create<PresentationStore>()(
     };
   })
 );
+
+// Debounced auto-save: saves 3s after last presentation change
+let autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
+usePresentationStore.subscribe(
+  (state) => state.presentation,
+  (presentation) => {
+    if (autoSaveTimer) clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(() => {
+      saveCompressed(AUTOSAVE_KEY, presentation);
+      usePresentationStore.setState({ isSaving: false, lastSavedAt: Date.now() });
+    }, AUTOSAVE_DEBOUNCE_MS);
+    usePresentationStore.setState({ isSaving: true });
+  }
+);
