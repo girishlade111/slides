@@ -40,6 +40,11 @@ export function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorP
     startAngle: number;
     startRotation: number;
   } | null>(null);
+  const [snapToGrid, setSnapToGrid] = useState(true);
+  const GRID_SIZE = 10;
+
+  const snap = (val: number) => snapToGrid ? Math.round(val / GRID_SIZE) * GRID_SIZE : Math.round(val);
+
   const bgStyle = getBackgroundStyle(slide.background);
 
   // Handle clicking on empty canvas area
