@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Plus, Copy, Trash2, ChevronUp, ChevronDown, Clipboard, Files } from 'lucide-react';
 import {
   DndContext,

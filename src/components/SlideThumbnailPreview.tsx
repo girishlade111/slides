@@ -8,7 +8,6 @@ interface SlideThumbnailPreviewProps {
 const THUMB_W = 192;
 const THUMB_H = 108;
 const CANVAS_W = 960;
-const CANVAS_H = 540;
 
 /**
  * Renders a miniature CSS-based preview of slide objects.
