@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { FixedSizeList as VirtualList } from 'react-window';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Plus, Copy, Trash2, MoreHorizontal } from 'lucide-react';
 import {
   DropdownMenu,
