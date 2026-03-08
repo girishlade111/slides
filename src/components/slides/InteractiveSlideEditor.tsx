@@ -40,6 +40,11 @@ export function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorP
     startAngle: number;
     startRotation: number;
   } | null>(null);
+  const [snapToGrid, setSnapToGrid] = useState(true);
+  const GRID_SIZE = 10;
+
+  const snap = (val: number) => snapToGrid ? Math.round(val / GRID_SIZE) * GRID_SIZE : Math.round(val);
+
   const bgStyle = getBackgroundStyle(slide.background);
 
   // Handle clicking on empty canvas area
@@ -116,8 +121,8 @@ export function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorP
         const dy = e.clientY / scale - dragState.startY;
         updateObject(slide.id, dragState.objectId, {
           position: {
-            x: Math.round(dragState.startObjX + dx),
-            y: Math.round(dragState.startObjY + dy),
+            x: snap(dragState.startObjX + dx),
+            y: snap(dragState.startObjY + dy),
           },
         });
       }
@@ -135,9 +140,19 @@ export function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorP
         if (h.includes('s')) newH = Math.max(20, resizeState.startH + dy);
         if (h.includes('n')) { newH = Math.max(20, resizeState.startH - dy); newY = resizeState.startObjY + dy; }
 
+        // Shift = maintain aspect ratio (corner handles only)
+        if (e.shiftKey && (h === 'nw' || h === 'ne' || h === 'sw' || h === 'se')) {
+          const aspect = resizeState.startW / resizeState.startH;
+          if (Math.abs(dx) > Math.abs(dy)) {
+            newH = newW / aspect;
+          } else {
+            newW = newH * aspect;
+          }
+        }
+
         updateObject(slide.id, resizeState.objectId, {
-          size: { width: Math.round(newW), height: Math.round(newH) },
-          position: { x: Math.round(newX), y: Math.round(newY) },
+          size: { width: snap(Math.max(20, newW)), height: snap(Math.max(20, newH)) },
+          position: { x: snap(newX), y: snap(newY) },
         });
       }
       if (rotateState) {
