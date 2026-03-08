@@ -54,6 +54,9 @@ interface SlidesState {
   addShape: (shapeType: import('@/data/slides').ShapeType) => void;
   addImage: (slideId: string, src: string, width: number, height: number) => void;
   deleteObject: (slideId: string, objectId: string) => void;
+  updateSlideBackground: (slideId: string, bg: SlideBackground) => void;
+  applyBackgroundToAll: (bg: SlideBackground) => void;
+  resetSlideBackground: (slideId: string) => void;
 
   newPresentation: (name: string) => void;
   openPresentation: (id: string) => void;
