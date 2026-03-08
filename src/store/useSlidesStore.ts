@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { slides as initialSlides } from '@/data/slides';
+import { slides as initialSlides, createObject } from '@/data/slides';
 import type { SlideData, SlideObject } from '@/data/slides';
 
 let slideCounter = initialSlides.length;
@@ -7,11 +7,15 @@ let slideCounter = initialSlides.length;
 interface SlidesState {
   slides: SlideData[];
   currentIndex: number;
+  selectedObjectId: string | null;
 
   // Navigation
   setCurrentIndex: (index: number) => void;
   goNext: () => void;
   goPrev: () => void;
+
+  // Selection
+  setSelectedObjectId: (id: string | null) => void;
 
   // Slide CRUD
   setSlides: (slides: SlideData[]) => void;
@@ -24,6 +28,8 @@ interface SlidesState {
 
   // Object operations
   updateObjectText: (slideId: string, objectId: string, text: string) => void;
+  updateObjectStyle: (slideId: string, objectId: string, style: Partial<SlideObject>) => void;
+  setObjectPosition: (slideId: string, objectId: string, x: number, y: number) => void;
   addBodyObject: (slideId: string) => void;
   deleteObject: (slideId: string, objectId: string) => void;
 }
@@ -31,18 +37,21 @@ interface SlidesState {
 export const useSlidesStore = create<SlidesState>((set, get) => ({
   slides: initialSlides,
   currentIndex: 0,
+  selectedObjectId: null,
 
-  setCurrentIndex: (index) => set({ currentIndex: index }),
+  setCurrentIndex: (index) => set({ currentIndex: index, selectedObjectId: null }),
 
   goNext: () => {
     const { currentIndex, slides } = get();
-    if (currentIndex < slides.length - 1) set({ currentIndex: currentIndex + 1 });
+    if (currentIndex < slides.length - 1) set({ currentIndex: currentIndex + 1, selectedObjectId: null });
   },
 
   goPrev: () => {
     const { currentIndex } = get();
-    if (currentIndex > 0) set({ currentIndex: currentIndex - 1 });
+    if (currentIndex > 0) set({ currentIndex: currentIndex - 1, selectedObjectId: null });
   },
+
+  setSelectedObjectId: (id) => set({ selectedObjectId: id }),
 
   setSlides: (slides) => set({ slides }),
 
@@ -59,14 +68,14 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
       id: Date.now().toString(),
       name: `New Slide ${slideCounter}`,
       objects: [
-        { id: crypto.randomUUID(), type: 'title', text: `New Slide ${slideCounter}` },
-        { id: crypto.randomUUID(), type: 'body', text: '' },
+        createObject('title', `New Slide ${slideCounter}`),
+        createObject('body', ''),
       ],
     };
     set((state) => {
       const updated = [...state.slides];
       updated.splice(currentIndex + 1, 0, newSlide);
-      return { slides: updated, currentIndex: currentIndex + 1 };
+      return { slides: updated, currentIndex: currentIndex + 1, selectedObjectId: null };
     });
   },
 
@@ -76,6 +85,7 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
     set({
       slides: slides.filter((_, i) => i !== currentIndex),
       currentIndex: Math.min(currentIndex, slides.length - 2),
+      selectedObjectId: null,
     });
   },
 
@@ -114,7 +124,6 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
           ? {
               ...s,
               objects: s.objects.map((o) => (o.id === objectId ? { ...o, text } : o)),
-              // Keep name synced with title object
               name: s.objects.find((o) => o.id === objectId)?.type === 'title' ? text : s.name,
             }
           : s
@@ -122,16 +131,35 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
     }));
   },
 
+  updateObjectStyle: (slideId, objectId, style) => {
+    set((state) => ({
+      slides: state.slides.map((s) =>
+        s.id === slideId
+          ? { ...s, objects: s.objects.map((o) => (o.id === objectId ? { ...o, ...style } : o)) }
+          : s
+      ),
+    }));
+  },
+
+  setObjectPosition: (slideId, objectId, x, y) => {
+    set((state) => ({
+      slides: state.slides.map((s) =>
+        s.id === slideId
+          ? { ...s, objects: s.objects.map((o) => (o.id === objectId ? { ...o, x, y } : o)) }
+          : s
+      ),
+    }));
+  },
+
   addBodyObject: (slideId) => {
-    const newObj: SlideObject = {
-      id: crypto.randomUUID(),
-      type: 'body',
-      text: '',
-    };
+    const slide = get().slides.find((s) => s.id === slideId);
+    const yOffset = slide ? Math.max(...slide.objects.map((o) => o.y + o.height), 0) + 20 : 200;
+    const newObj = createObject('body', '', { y: yOffset });
     set((state) => ({
       slides: state.slides.map((s) =>
         s.id === slideId ? { ...s, objects: [...s.objects, newObj] } : s
       ),
+      selectedObjectId: newObj.id,
     }));
   },
 
@@ -139,10 +167,10 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
     set((state) => ({
       slides: state.slides.map((s) => {
         if (s.id !== slideId) return s;
-        // Don't delete if it's the last object
         if (s.objects.length <= 1) return s;
         return { ...s, objects: s.objects.filter((o) => o.id !== objectId) };
       }),
+      selectedObjectId: state.selectedObjectId === objectId ? null : state.selectedObjectId,
     }));
   },
 }));
