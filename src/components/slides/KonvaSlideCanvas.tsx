@@ -28,9 +28,6 @@ export function KonvaSlideCanvas({ slide, width, height, snapToGrid = true }: Ko
     selectObjects,
     clearSelection,
     updateObject,
-    deleteObject,
-    moveObject,
-    duplicateObject,
   } = usePresentationStore();
 
   const stageRef = useRef<Konva.Stage>(null);
