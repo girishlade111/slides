@@ -123,26 +123,50 @@ export const KonvaSlideCanvas = forwardRef<KonvaSlideCanvasHandle, KonvaSlideCan
             }
 
             const fontSize = obj.fontSize ?? (obj.type === 'title' ? 44 : obj.type === 'subtitle' ? 28 : 22);
-            const fontStyle = obj.type === 'title' ? 'bold' : 'normal';
+            const isBold = obj.fontWeight === 'bold' || obj.type === 'title';
+            const isItalic = obj.fontStyle === 'italic';
+            const fontStyleStr = `${isBold ? 'bold' : ''}${isItalic ? ' italic' : ''}`.trim() || 'normal';
+            const decoration = obj.textDecoration && obj.textDecoration !== 'none' ? obj.textDecoration : '';
+
+            // Format text for list styles
+            let displayText = obj.text || (obj.type === 'title' ? 'Untitled' : 'Text...');
+            if (obj.listStyle === 'bullet') {
+              displayText = displayText.split('\n').map((line) => `• ${line}`).join('\n');
+            } else if (obj.listStyle === 'numbered') {
+              displayText = displayText.split('\n').map((line, i) => `${i + 1}. ${line}`).join('\n');
+            }
 
             return (
-              <Text
-                key={obj.id}
-                ref={refSetter(obj.id) as React.LegacyRef<Konva.Text>}
-                x={obj.x}
-                y={obj.y}
-                width={obj.width}
-                text={obj.text || (obj.type === 'title' ? 'Untitled' : 'Text...')}
-                fontSize={fontSize}
-                fontFamily={obj.fontFamily ?? 'Inter, system-ui, sans-serif'}
-                fontStyle={fontStyle}
-                fill={obj.color ?? '#1a1a2e'}
-                align={obj.align ?? (obj.type === 'title' ? 'center' : 'left')}
-                wrap="word"
-                draggable={!readOnly}
-                padding={4}
-                {...commonEvents(obj.id)}
-              />
+              <React.Fragment key={obj.id}>
+                {obj.backgroundColor && obj.backgroundColor !== 'transparent' && (
+                  <Rect
+                    x={obj.x}
+                    y={obj.y}
+                    width={obj.width}
+                    height={obj.height}
+                    fill={obj.backgroundColor}
+                    listening={false}
+                  />
+                )}
+                <Text
+                  ref={refSetter(obj.id) as React.LegacyRef<Konva.Text>}
+                  x={obj.x}
+                  y={obj.y}
+                  width={obj.width}
+                  text={displayText}
+                  fontSize={fontSize}
+                  fontFamily={obj.fontFamily ?? 'Inter, system-ui, sans-serif'}
+                  fontStyle={fontStyleStr}
+                  textDecoration={decoration}
+                  fill={obj.color ?? '#1a1a2e'}
+                  align={obj.align === 'justify' ? 'left' : (obj.align ?? (obj.type === 'title' ? 'center' : 'left'))}
+                  lineHeight={obj.lineHeight ?? 1.15}
+                  wrap="word"
+                  draggable={!readOnly}
+                  padding={4}
+                  {...commonEvents(obj.id)}
+                />
+              </React.Fragment>
             );
           })}
 
