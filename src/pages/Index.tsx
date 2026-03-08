@@ -160,15 +160,25 @@ export default function Index() {
         description: slide.notes || undefined,
       }));
 
-  // Current slide content — interactive editor for editable mode
-  const CurrentSlideContent = useShowcaseSlides
+  // Current slide content for showcase mode only
+  const ShowcaseContent = useShowcaseSlides
     ? (() => {
         const Comp = showcaseSlidesData[currentSlideIndex]?.component || showcaseSlidesData[0].component;
         return <Comp />;
       })()
-    : currentSlide
-      ? <InteractiveSlideEditor slide={currentSlide} scale={canvasScale} />
-      : null;
+    : null;
+
+  // Resize observer for Konva canvas
+  useEffect(() => {
+    if (useShowcaseSlides || !canvasContainerRef.current) return;
+    const el = canvasContainerRef.current;
+    const observer = new ResizeObserver(() => {
+      setCanvasSize({ width: el.clientWidth, height: el.clientHeight });
+    });
+    observer.observe(el);
+    setCanvasSize({ width: el.clientWidth, height: el.clientHeight });
+    return () => observer.disconnect();
+  }, [useShowcaseSlides]);
 
   return (
     <div className="h-screen flex flex-col bg-[#f0f1f3] overflow-hidden">
@@ -208,23 +218,29 @@ export default function Index() {
 
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 relative overflow-hidden">
-            <SlideCanvas
-              showGrid={false}
-              zoom={zoom}
-              onZoomChange={setZoom}
-              currentSlide={currentSlideIndex + 1}
-              totalSlides={totalSlides}
-              onPrevSlide={() => {
-                if (useShowcaseSlides) setCurrentSlideIndex(Math.max(0, currentSlideIndex - 1));
-                else store.navigateSlide('prev');
-              }}
-              onNextSlide={() => {
-                if (useShowcaseSlides) setCurrentSlideIndex(Math.min(totalSlides - 1, currentSlideIndex + 1));
-                else store.navigateSlide('next');
-              }}
-            >
-              {CurrentSlideContent}
-            </SlideCanvas>
+            {useShowcaseSlides ? (
+              <SlideCanvas
+                showGrid={false}
+                zoom={zoom}
+                onZoomChange={setZoom}
+                currentSlide={currentSlideIndex + 1}
+                totalSlides={totalSlides}
+                onPrevSlide={() => setCurrentSlideIndex(Math.max(0, currentSlideIndex - 1))}
+                onNextSlide={() => setCurrentSlideIndex(Math.min(totalSlides - 1, currentSlideIndex + 1))}
+              >
+                {ShowcaseContent}
+              </SlideCanvas>
+            ) : (
+              <div ref={canvasContainerRef} className="flex-1 h-full bg-[#e8e8e8] relative">
+                {currentSlide && (
+                  <KonvaSlideCanvas
+                    slide={currentSlide}
+                    width={canvasSize.width}
+                    height={canvasSize.height}
+                  />
+                )}
+              </div>
+            )}
 
             {showGrid && (
               <SlideOverviewGrid
