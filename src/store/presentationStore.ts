@@ -36,6 +36,14 @@ interface PresentationStore {
   addObject: (slideId: string, object: SlideObject) => void;
   updateObject: (slideId: string, objectId: string, updates: Partial<SlideObject>) => void;
   deleteObject: (slideId: string, objectId: string) => void;
+  moveObject: (slideId: string, objectId: string, deltaX: number, deltaY: number) => void;
+  resizeObject: (slideId: string, objectId: string, width: number, height: number) => void;
+  rotateObject: (slideId: string, objectId: string, angle: number) => void;
+  duplicateObject: (slideId: string, objectId: string) => void;
+  bringToFront: (slideId: string, objectId: string) => void;
+  sendToBack: (slideId: string, objectId: string) => void;
+  bringForward: (slideId: string, objectId: string) => void;
+  sendBackward: (slideId: string, objectId: string) => void;
   selectObjects: (objectIds: string[]) => void;
   clearSelection: () => void;
 
