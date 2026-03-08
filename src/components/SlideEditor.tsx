@@ -1,5 +1,5 @@
 import { Plus, Trash2 } from 'lucide-react';
-import type { SlideData, SlideObject } from '@/data/slides';
+import type { SlideObject } from '@/data/slides';
 import { cn } from '@/lib/utils';
 import { useSlidesStore } from '@/store/useSlidesStore';
 

@@ -2,7 +2,7 @@ import { Stage, Layer, Rect, Text, Transformer } from 'react-konva';
 import type { SlideData } from '@/data/slides';
 import { useSlidesStore } from '@/store/useSlidesStore';
 import type Konva from 'konva';
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect } from 'react';
 
 const CANVAS_W = 960;
 const CANVAS_H = 540;
@@ -16,15 +16,15 @@ export function KonvaSlideCanvas({ slide }: KonvaSlideCanvasProps) {
   const transformerRef = useRef<Konva.Transformer>(null);
   const nodeRefs = useRef<Record<string, Konva.Node>>({});
 
-  if (!slide) return null;
-
   // Update transformer when selection changes
   useEffect(() => {
     if (!transformerRef.current) return;
     const node = selectedObjectId ? nodeRefs.current[selectedObjectId] : null;
     transformerRef.current.nodes(node ? [node] : []);
     transformerRef.current.getLayer()?.batchDraw();
-  }, [selectedObjectId, slide.objects]);
+  }, [selectedObjectId, slide?.objects]);
+
+  if (!slide) return null;
 
   const handleDragEnd = (objectId: string, e: Konva.KonvaEventObject<DragEvent>) => {
     const node = e.target;
