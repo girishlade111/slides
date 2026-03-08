@@ -85,9 +85,8 @@ export async function exportToPPTX(presentation: Presentation): Promise<void> {
           x, y, w, h, rotate,
           fill: { color: hexColor(p.fillColor), transparency: Math.round((1 - p.fillOpacity / 100) * 100) },
           line: p.borderWidth > 0 ? { color: hexColor(p.borderColor), width: p.borderWidth } : undefined,
-          transparency: Math.round((1 - obj.opacity) * 100),
           rectRadius: p.borderRadius ? p.borderRadius * PX_TO_INCHES : undefined,
-        });
+        } as any);
       }
 
       if (obj.properties.type === 'image') {
