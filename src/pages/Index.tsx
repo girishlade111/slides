@@ -6,6 +6,7 @@ import { SlideSidebar } from '@/components/SlideSidebar';
 import { ShapesMenu } from '@/components/ShapesMenu';
 import { ImageMenu } from '@/components/ImageMenu';
 import { TextFormattingToolbar } from '@/components/TextFormattingToolbar';
+import { SlideBackgroundEditor } from '@/components/SlideBackgroundEditor';
 import { KonvaSlideCanvas, type KonvaSlideCanvasHandle } from '@/components/slides/KonvaSlideCanvas';
 import { PresentationOverlay } from '@/components/slides/PresentationOverlay';
 import { OpenPresentationDialog } from '@/components/dialogs/OpenPresentationDialog';
