@@ -82,10 +82,35 @@ export interface SlideObject {
   cornerRadius?: number;
 }
 
+export interface GradientStop { color: string; position: number; }
+
+export interface SlideBackground {
+  type: 'color' | 'gradient' | 'image' | 'pattern';
+  color?: string;
+  gradient?: {
+    type: 'linear' | 'radial' | 'diagonal-lr' | 'diagonal-rl';
+    stops: GradientStop[];
+    angle: number;
+  };
+  image?: {
+    src: string;
+    fit: 'fill' | 'fit' | 'stretch' | 'tile' | 'center';
+    opacity: number;
+    blur: number;
+  };
+  pattern?: {
+    type: string;
+    color: string;
+    backgroundColor: string;
+    scale: number;
+  };
+}
+
 export interface SlideData {
   id: string;
   name: string;
   objects: SlideObject[];
+  background?: SlideBackground;
 }
 
 export function getSlideName(slide: SlideData): string {

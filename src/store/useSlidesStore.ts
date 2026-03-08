@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { slides as initialSlides, createObject } from '@/data/slides';
-import type { SlideData, SlideObject } from '@/data/slides';
+import type { SlideData, SlideObject, SlideBackground } from '@/data/slides';
 import {
   loadFromStorage, saveToStorage, clearStorage,
   loadPresentation, savePresentation, deletePresentation as deletePresentationFromStorage,
@@ -54,6 +54,9 @@ interface SlidesState {
   addShape: (shapeType: import('@/data/slides').ShapeType) => void;
   addImage: (slideId: string, src: string, width: number, height: number) => void;
   deleteObject: (slideId: string, objectId: string) => void;
+  updateSlideBackground: (slideId: string, bg: SlideBackground) => void;
+  applyBackgroundToAll: (bg: SlideBackground) => void;
+  resetSlideBackground: (slideId: string) => void;
 
   newPresentation: (name: string) => void;
   openPresentation: (id: string) => void;
@@ -331,6 +334,24 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
         return { ...s, objects: s.objects.filter((o) => o.id !== objectId) };
       }),
       selectedObjectId: state.selectedObjectId === objectId ? null : state.selectedObjectId,
+    }));
+  },
+
+  updateSlideBackground: (slideId, bg) => {
+    set((state) => ({
+      slides: state.slides.map((s) => (s.id === slideId ? { ...s, background: bg } : s)),
+    }));
+  },
+
+  applyBackgroundToAll: (bg) => {
+    set((state) => ({
+      slides: state.slides.map((s) => ({ ...s, background: bg })),
+    }));
+  },
+
+  resetSlideBackground: (slideId) => {
+    set((state) => ({
+      slides: state.slides.map((s) => (s.id === slideId ? { ...s, background: undefined } : s)),
     }));
   },
 
