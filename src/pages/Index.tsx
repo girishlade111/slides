@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { PPTTitleBar } from '@/components/layout/PPTTitleBar';
 import { PPTRibbon } from '@/components/layout/PPTRibbon';
 import { PPTSidebar } from '@/components/layout/PPTSidebar';
@@ -9,18 +9,29 @@ import { SlideOverviewGrid } from '@/components/slides/SlideOverviewGrid';
 import { PresentationMode } from '@/components/slides/PresentationMode';
 import { PresenterView } from '@/components/slides/PresenterView';
 import { PresenterNotesPanel } from '@/components/slides/PresenterNotesPanel';
+import { DynamicSlideRenderer } from '@/components/slides/DynamicSlideRenderer';
+import { usePresentationStore } from '@/store/presentationStore';
 import { showcaseSlides } from '@/slides/showcase';
-
-interface SlideData {
-  id: string;
-  component: React.ComponentType<any>;
-  name: string;
-  isWIP: boolean;
-  description?: string;
-}
+import { toast } from '@/hooks/use-toast';
 
 export default function Index() {
-  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  // Store
+  const store = usePresentationStore();
+  const {
+    presentation,
+    currentSlideIndex,
+    addSlide,
+    deleteSlide,
+    duplicateSlide,
+    reorderSlides,
+    setCurrentSlideIndex,
+    undo,
+    redo,
+    saveToLocalStorage,
+    loadFromLocalStorage,
+  } = store;
+
+  // UI state (not persisted)
   const [showGrid, setShowGrid] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
@@ -30,10 +41,20 @@ export default function Index() {
   const [isPresentationMode, setIsPresentationMode] = useState(false);
   const [isPresenterView, setIsPresenterView] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(220);
+  const [useShowcaseSlides, setUseShowcaseSlides] = useState(true);
 
-  const slides = React.useMemo<SlideData[]>(() =>
+  // Load saved presentation on mount
+  useEffect(() => {
+    const loaded = loadFromLocalStorage();
+    if (loaded) {
+      setUseShowcaseSlides(false);
+    }
+  }, []);
+
+  // Showcase slides for demo mode
+  const showcaseSlidesData = React.useMemo(() =>
     showcaseSlides.map((s) => ({
-      id: `slide-${s.name.toLowerCase().replace(/\s+/g, '-')}`,
+      id: `showcase-${s.name.toLowerCase().replace(/\s+/g, '-')}`,
       component: s.component,
       name: s.name,
       isWIP: false,
@@ -42,36 +63,81 @@ export default function Index() {
     []
   );
 
-  const currentSlideId = slides[activeSlideIndex]?.id ?? null;
+  // Current slides to display
+  const slides = presentation.slides;
+  const currentSlide = slides[currentSlideIndex];
+  const currentSlideId = currentSlide?.id ?? null;
+  const totalSlides = useShowcaseSlides ? showcaseSlidesData.length : slides.length;
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDarkMode);
   }, [isDarkMode]);
 
-  // Keyboard navigation
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (isPresentationMode || isPresenterView) return;
 
+      const ctrl = e.ctrlKey || e.metaKey;
+
+      // Ctrl+Z: Undo
+      if (ctrl && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+        return;
+      }
+      // Ctrl+Y or Ctrl+Shift+Z: Redo
+      if ((ctrl && e.key === 'y') || (ctrl && e.shiftKey && e.key === 'z')) {
+        e.preventDefault();
+        redo();
+        return;
+      }
+      // Ctrl+S: Save
+      if (ctrl && e.key === 's') {
+        e.preventDefault();
+        saveToLocalStorage();
+        toast({ title: 'Saved', description: 'Presentation saved successfully.' });
+        return;
+      }
+      // Ctrl+D: Duplicate slide
+      if (ctrl && e.key === 'd') {
+        e.preventDefault();
+        if (!useShowcaseSlides && currentSlide) {
+          duplicateSlide(currentSlide.id);
+          toast({ title: 'Slide duplicated' });
+        }
+        return;
+      }
+      // Delete: Delete current slide
+      if (e.key === 'Delete' && !ctrl && slides.length > 1 && !useShowcaseSlides && currentSlide) {
+        e.preventDefault();
+        deleteSlide(currentSlide.id);
+        toast({ title: 'Slide deleted' });
+        return;
+      }
+
+      // Arrow navigation
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
         e.preventDefault();
-        setActiveSlideIndex(prev => Math.min(slides.length - 1, prev + 1));
+        if (useShowcaseSlides) {
+          setCurrentSlideIndex(Math.min(showcaseSlidesData.length - 1, currentSlideIndex + 1));
+        } else {
+          store.navigateSlide('next');
+        }
       } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
         e.preventDefault();
-        setActiveSlideIndex(prev => Math.max(0, prev - 1));
-      } else if (e.key === 'G' && e.shiftKey && !e.ctrlKey && !e.metaKey) {
+        if (useShowcaseSlides) {
+          setCurrentSlideIndex(Math.max(0, currentSlideIndex - 1));
+        } else {
+          store.navigateSlide('prev');
+        }
+      } else if (e.key === 'G' && e.shiftKey && !ctrl) {
         e.preventDefault();
         setShowGrid(prev => !prev);
-      } else if (e.key === 'N' && e.shiftKey && !e.ctrlKey && !e.metaKey) {
+      } else if (e.key === 'N' && e.shiftKey && !ctrl) {
         e.preventDefault();
         setShowNotes(prev => !prev);
-      } else if (e.key === 'P' && e.shiftKey && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault();
-        setIsPresentationMode(true);
-      } else if (e.key === 'V' && e.shiftKey && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault();
-        setIsPresenterView(true);
       } else if (e.key === 'F5') {
         e.preventDefault();
         setIsPresentationMode(true);
@@ -80,16 +146,76 @@ export default function Index() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [slides.length, isPresentationMode, isPresenterView]);
+  }, [currentSlideIndex, slides.length, isPresentationMode, isPresenterView, useShowcaseSlides, currentSlide]);
 
-  const ActiveSlideComponent = slides[activeSlideIndex]?.component || showcaseSlides[0].component;
+  // Handle adding a new slide (switches from showcase to editable mode)
+  const handleAddSlide = useCallback(() => {
+    if (useShowcaseSlides) {
+      setUseShowcaseSlides(false);
+      // The store already has a default slide
+      toast({ title: 'New presentation', description: 'Started a new editable presentation.' });
+    } else {
+      addSlide();
+      toast({ title: 'Slide added' });
+    }
+  }, [useShowcaseSlides, addSlide]);
+
+  const handleDeleteSlide = useCallback((slideId: string) => {
+    if (useShowcaseSlides) return;
+    if (slides.length <= 1) {
+      toast({ title: "Can't delete", description: 'Presentation must have at least one slide.', variant: 'destructive' });
+      return;
+    }
+    deleteSlide(slideId);
+    toast({ title: 'Slide deleted' });
+  }, [useShowcaseSlides, slides.length, deleteSlide]);
+
+  const handleDuplicateSlide = useCallback((slideId: string) => {
+    if (useShowcaseSlides) return;
+    duplicateSlide(slideId);
+    toast({ title: 'Slide duplicated' });
+  }, [useShowcaseSlides, duplicateSlide]);
+
+  // Build sidebar data
+  const sidebarSlides = useShowcaseSlides
+    ? showcaseSlidesData.map((s) => ({
+        id: s.id,
+        content: <s.component />,
+      }))
+    : slides.map((slide) => ({
+        id: slide.id,
+        content: <DynamicSlideRenderer slide={slide} />,
+      }));
+
+  // Build presentation/presenter mode slide data
+  const modeSlides = useShowcaseSlides
+    ? showcaseSlidesData.map((s) => ({
+        id: s.id,
+        component: s.component,
+        isWIP: false,
+        description: undefined,
+      }))
+    : slides.map((slide) => ({
+        id: slide.id,
+        component: () => <DynamicSlideRenderer slide={slide} />,
+        isWIP: false,
+        description: slide.notes || undefined,
+      }));
+
+  // Current slide component
+  const CurrentSlideContent = useShowcaseSlides
+    ? (() => {
+        const Comp = showcaseSlidesData[currentSlideIndex]?.component || showcaseSlidesData[0].component;
+        return <Comp />;
+      })()
+    : currentSlide
+      ? <DynamicSlideRenderer slide={currentSlide} />
+      : null;
 
   return (
     <div className="h-screen flex flex-col bg-[#f0f1f3] overflow-hidden">
-      {/* Title bar */}
-      <PPTTitleBar fileName="Presentation1" />
+      <PPTTitleBar fileName={presentation.name} />
 
-      {/* Ribbon */}
       <PPTRibbon
         showGrid={showGrid}
         onToggleGrid={() => {
@@ -105,17 +231,17 @@ export default function Index() {
         onStartPresenterView={() => setIsPresenterView(true)}
       />
 
-      {/* Main content area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar */}
         {showSidebar && (
           <PPTSidebar
-            slides={slides.map((slide) => ({
-              id: slide.id,
-              content: <slide.component />,
-            }))}
-            activeSlideIndex={activeSlideIndex}
-            onSlideClick={setActiveSlideIndex}
+            slides={sidebarSlides}
+            activeSlideIndex={currentSlideIndex}
+            onSlideClick={setCurrentSlideIndex}
+            onAddSlide={handleAddSlide}
+            onDeleteSlide={handleDeleteSlide}
+            onDuplicateSlide={handleDuplicateSlide}
+            onReorderSlides={useShowcaseSlides ? undefined : reorderSlides}
+            canDeleteSlide={!useShowcaseSlides && slides.length > 1}
             width={sidebarWidth}
             onWidthChange={setSidebarWidth}
             onResizeStart={() => {}}
@@ -124,52 +250,67 @@ export default function Index() {
           />
         )}
 
-        {/* Canvas area */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 relative overflow-hidden">
             <SlideCanvas
               showGrid={false}
               zoom={zoom}
               onZoomChange={setZoom}
-              currentSlide={activeSlideIndex + 1}
-              totalSlides={slides.length}
-              onPrevSlide={() => setActiveSlideIndex(Math.max(0, activeSlideIndex - 1))}
-              onNextSlide={() => setActiveSlideIndex(Math.min(slides.length - 1, activeSlideIndex + 1))}
+              currentSlide={currentSlideIndex + 1}
+              totalSlides={totalSlides}
+              onPrevSlide={() => {
+                if (useShowcaseSlides) {
+                  setCurrentSlideIndex(Math.max(0, currentSlideIndex - 1));
+                } else {
+                  store.navigateSlide('prev');
+                }
+              }}
+              onNextSlide={() => {
+                if (useShowcaseSlides) {
+                  setCurrentSlideIndex(Math.min(totalSlides - 1, currentSlideIndex + 1));
+                } else {
+                  store.navigateSlide('next');
+                }
+              }}
             >
-              <ActiveSlideComponent />
+              {CurrentSlideContent}
             </SlideCanvas>
 
-            {/* Grid View Overlay */}
             {showGrid && (
               <SlideOverviewGrid
-                slides={slides}
-                activeSlideIndex={activeSlideIndex}
-                onSlideClick={setActiveSlideIndex}
+                slides={useShowcaseSlides
+                  ? showcaseSlidesData
+                  : slides.map((s) => ({
+                      id: s.id,
+                      component: () => <DynamicSlideRenderer slide={s} />,
+                      name: s.name,
+                      isWIP: false,
+                    }))
+                }
+                activeSlideIndex={currentSlideIndex}
+                onSlideClick={setCurrentSlideIndex}
                 onClose={() => setShowGrid(false)}
               />
             )}
           </div>
 
-          {/* Presenter Notes Panel */}
           {showNotes && (
             <PresenterNotesPanel
-              slideId={currentSlideId}
-              slideIndex={activeSlideIndex}
+              slideId={useShowcaseSlides ? showcaseSlidesData[currentSlideIndex]?.id : currentSlideId}
+              slideIndex={currentSlideIndex}
               onClose={() => setShowNotes(false)}
             />
           )}
         </div>
 
-        {/* Properties Panel */}
         {showProperties && (
           <PropertiesPanel onClose={() => setShowProperties(false)} />
         )}
       </div>
 
-      {/* Status bar */}
       <PPTStatusBar
-        currentSlide={activeSlideIndex + 1}
-        totalSlides={slides.length}
+        currentSlide={currentSlideIndex + 1}
+        totalSlides={totalSlides}
         zoom={zoom}
         onZoomChange={setZoom}
         showNotes={showNotes}
@@ -179,32 +320,20 @@ export default function Index() {
         onToggleGrid={() => setShowGrid(!showGrid)}
       />
 
-      {/* Presentation Mode */}
       {isPresentationMode && (
         <PresentationMode
-          slides={slides.map(slide => ({
-            id: slide.id,
-            component: slide.component,
-            isWIP: slide.isWIP,
-            description: slide.description,
-          }))}
-          activeIndex={activeSlideIndex}
-          onIndexChange={setActiveSlideIndex}
+          slides={modeSlides}
+          activeIndex={currentSlideIndex}
+          onIndexChange={setCurrentSlideIndex}
           onExit={() => setIsPresentationMode(false)}
         />
       )}
 
-      {/* Presenter View */}
       {isPresenterView && (
         <PresenterView
-          slides={slides.map(slide => ({
-            id: slide.id,
-            component: slide.component,
-            isWIP: slide.isWIP,
-            description: slide.description,
-          }))}
-          activeIndex={activeSlideIndex}
-          onIndexChange={setActiveSlideIndex}
+          slides={modeSlides}
+          activeIndex={currentSlideIndex}
+          onIndexChange={setCurrentSlideIndex}
           onExit={() => setIsPresenterView(false)}
         />
       )}
