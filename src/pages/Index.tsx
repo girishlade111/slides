@@ -1,9 +1,10 @@
-import { useEffect, useState, useRef } from 'react';
-import { RotateCcw, Check, Loader2 } from 'lucide-react';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { RotateCcw, Check, Loader2, Play, Download } from 'lucide-react';
 import { SlideList } from '@/components/SlideList';
 import { SlideEditor } from '@/components/SlideEditor';
 import { SlideActions } from '@/components/SlideActions';
-import { KonvaSlideCanvas } from '@/components/slides/KonvaSlideCanvas';
+import { KonvaSlideCanvas, type KonvaSlideCanvasHandle } from '@/components/slides/KonvaSlideCanvas';
+import { PresentationOverlay } from '@/components/slides/PresentationOverlay';
 import { useSlidesStore } from '@/store/useSlidesStore';
 import { saveToStorage, clearStorage } from '@/lib/storage';
 import { slides as defaultSlides } from '@/data/slides';
@@ -18,12 +19,13 @@ export default function Index() {
 
   const currentSlide = slides[currentIndex];
   const totalSlides = slides.length;
+  const canvasRef = useRef<KonvaSlideCanvasHandle>(null);
 
-  // Save status
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving'>('saved');
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const [presenting, setPresenting] = useState(false);
 
-  // Auto-save with debounce
+  // Auto-save
   useEffect(() => {
     setSaveStatus('saving');
     clearTimeout(timerRef.current);
@@ -36,6 +38,7 @@ export default function Index() {
 
   // Keyboard nav
   useEffect(() => {
+    if (presenting) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.key === 'ArrowRight') goNext();
@@ -43,7 +46,7 @@ export default function Index() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [goNext, goPrev]);
+  }, [goNext, goPrev, presenting]);
 
   const handleReset = () => {
     if (!window.confirm('Reset to example slides? Your current work will be lost.')) return;
@@ -52,12 +55,22 @@ export default function Index() {
     setCurrentIndex(0);
   };
 
+  const handleExportPng = useCallback(() => {
+    const stage = canvasRef.current?.getStage();
+    if (!stage) return;
+    const dataUrl = stage.toDataURL({ mimeType: 'image/png', pixelRatio: 2 });
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `slide-${currentIndex + 1}.png`;
+    a.click();
+  }, [currentIndex]);
+
   return (
     <div className="h-screen flex flex-col bg-background">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/30">
         <span className="text-sm font-semibold text-foreground">Lade Slides</span>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
             {saveStatus === 'saving' ? (
               <><Loader2 className="w-3 h-3 animate-spin" /> Saving...</>
@@ -66,18 +79,31 @@ export default function Index() {
             )}
           </span>
           <button
+            onClick={handleExportPng}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border border-border text-muted-foreground hover:bg-muted transition-colors"
+          >
+            <Download className="w-3 h-3" />
+            Export PNG
+          </button>
+          <button
+            onClick={() => setPresenting(true)}
+            className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            <Play className="w-3 h-3" />
+            Present
+          </button>
+          <button
             onClick={handleReset}
             className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border border-border text-muted-foreground hover:bg-muted transition-colors"
           >
             <RotateCcw className="w-3 h-3" />
-            Reset to Example
+            Reset
           </button>
         </div>
       </div>
 
       {/* Main layout */}
       <div className="flex-1 flex min-h-0">
-        {/* Sidebar */}
         <div className="w-60 flex flex-col border-r border-border">
           <SlideActions
             onAdd={addSlide}
@@ -96,10 +122,9 @@ export default function Index() {
           />
         </div>
 
-        {/* Canvas area */}
         <div className="flex-1 flex flex-col">
           <div className="flex-1 flex items-center justify-center p-6 bg-muted/20">
-            <KonvaSlideCanvas slide={currentSlide} />
+            <KonvaSlideCanvas ref={canvasRef} slide={currentSlide} />
           </div>
 
           <div className="flex items-center justify-between px-8 py-3 border-t border-border bg-muted/30">
@@ -123,9 +148,17 @@ export default function Index() {
           </div>
         </div>
 
-        {/* Properties panel */}
         <SlideEditor />
       </div>
+
+      {/* Presentation overlay */}
+      {presenting && (
+        <PresentationOverlay
+          slides={slides}
+          startIndex={currentIndex}
+          onClose={() => setPresenting(false)}
+        />
+      )}
     </div>
   );
 }
