@@ -17,6 +17,6 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
-    dedupe: ["react", "react-dom", "react/jsx-runtime", "three", "@react-three/fiber", "konva", "react-konva"],
+    dedupe: ["react", "react-dom", "react/jsx-runtime", "three", "@react-three/fiber"],
   },
 }));
