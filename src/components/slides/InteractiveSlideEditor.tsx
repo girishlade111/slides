@@ -155,7 +155,6 @@ export function InteractiveSlideEditor({ slide, scale }: InteractiveSlideEditorP
           position: { x: snap(newX), y: snap(newY) },
         });
       }
-      }
       if (rotateState) {
         const currentAngle = Math.atan2(e.clientY - rotateState.centerY, e.clientX - rotateState.centerX) * (180 / Math.PI);
         let newRotation = rotateState.startRotation + (currentAngle - rotateState.startAngle);
