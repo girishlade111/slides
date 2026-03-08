@@ -4,6 +4,7 @@ import { SlideEditor } from '@/components/SlideEditor';
 import { FileMenu } from '@/components/FileMenu';
 import { SlideSidebar } from '@/components/SlideSidebar';
 import { ShapesMenu } from '@/components/ShapesMenu';
+import { ImageMenu } from '@/components/ImageMenu';
 import { TextFormattingToolbar } from '@/components/TextFormattingToolbar';
 import { KonvaSlideCanvas, type KonvaSlideCanvasHandle } from '@/components/slides/KonvaSlideCanvas';
 import { PresentationOverlay } from '@/components/slides/PresentationOverlay';
@@ -36,7 +37,7 @@ export default function Index() {
   const selectedObj = selectedObjectId && currentSlide
     ? currentSlide.objects.find((o) => o.id === selectedObjectId)
     : null;
-  const isTextSelected = selectedObj && selectedObj.type !== 'shape';
+  const isTextSelected = selectedObj && selectedObj.type !== 'shape' && selectedObj.type !== 'image';
 
   // Auto-save
   useEffect(() => {
@@ -136,6 +137,7 @@ export default function Index() {
             Text Box
           </button>
           <ShapesMenu />
+          <ImageMenu />
           <button
             onClick={() => setPresenting(true)}
             className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"

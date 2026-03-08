@@ -14,9 +14,40 @@ export interface ShadowConfig {
   offsetY: number;
 }
 
+export interface ImageFilters {
+  grayscale: boolean;
+  sepia: boolean;
+  blur: number;
+  brightness: number;
+  contrast: number;
+  saturation: number;
+}
+
+export interface ImageBorder {
+  enabled: boolean;
+  color: string;
+  width: number;
+}
+
+export interface CropArea {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export const defaultImageFilters: ImageFilters = {
+  grayscale: false,
+  sepia: false,
+  blur: 0,
+  brightness: 100,
+  contrast: 100,
+  saturation: 100,
+};
+
 export interface SlideObject {
   id: string;
-  type: 'title' | 'subtitle' | 'body' | 'shape';
+  type: 'title' | 'subtitle' | 'body' | 'shape' | 'image';
   text: string;
   x: number;
   y: number;
@@ -41,6 +72,14 @@ export interface SlideObject {
   strokeWidth?: number;
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   shadow?: ShadowConfig;
+  // Image-specific
+  src?: string;
+  originalSrc?: string;
+  crop?: CropArea;
+  filters?: ImageFilters;
+  imgOpacity?: number;
+  border?: ImageBorder;
+  cornerRadius?: number;
 }
 
 export interface SlideData {

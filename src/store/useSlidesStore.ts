@@ -52,6 +52,7 @@ interface SlidesState {
   addBodyObject: (slideId: string) => void;
   addTextBox: (slideId: string) => void;
   addShape: (shapeType: import('@/data/slides').ShapeType) => void;
+  addImage: (slideId: string, src: string, width: number, height: number) => void;
   deleteObject: (slideId: string, objectId: string) => void;
 
   newPresentation: (name: string) => void;
@@ -283,6 +284,40 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
     set((state) => ({
       slides: state.slides.map((s) =>
         s.id === slide.id ? { ...s, objects: [...s.objects, newObj] } : s
+      ),
+      selectedObjectId: newObj.id,
+    }));
+  },
+
+  addImage: (slideId, src, origWidth, origHeight) => {
+    // Resize to fit within 400x400 while maintaining aspect ratio
+    let width = origWidth;
+    let height = origHeight;
+    const maxSize = 400;
+    if (width > maxSize || height > maxSize) {
+      const scale = Math.min(maxSize / width, maxSize / height);
+      width = Math.round(width * scale);
+      height = Math.round(height * scale);
+    }
+    const x = Math.round((960 - width) / 2);
+    const y = Math.round((540 - height) / 2);
+    const newObj: SlideObject = {
+      id: crypto.randomUUID(),
+      type: 'image',
+      text: '',
+      x,
+      y,
+      width,
+      height,
+      src,
+      originalSrc: src,
+      rotation: 0,
+      imgOpacity: 1,
+      cornerRadius: 0,
+    };
+    set((state) => ({
+      slides: state.slides.map((s) =>
+        s.id === slideId ? { ...s, objects: [...s.objects, newObj] } : s
       ),
       selectedObjectId: newObj.id,
     }));

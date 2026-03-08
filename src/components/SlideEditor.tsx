@@ -3,12 +3,14 @@ import type { SlideObject } from '@/data/slides';
 import { cn } from '@/lib/utils';
 import { useSlidesStore } from '@/store/useSlidesStore';
 import { ShapePropertiesPanel } from '@/components/ShapePropertiesPanel';
+import { ImagePropertiesPanel } from '@/components/ImagePropertiesPanel';
 
 const typeLabels: Record<string, string> = {
   title: 'Title',
   subtitle: 'Subtitle',
   body: 'Body',
   shape: 'Shape',
+  image: 'Image',
 };
 
 export function SlideEditor() {
@@ -27,6 +29,8 @@ export function SlideEditor() {
       {selectedObj ? (
         selectedObj.type === 'shape' ? (
           <ShapePropertiesPanel obj={selectedObj} slideId={slide.id} />
+        ) : selectedObj.type === 'image' ? (
+          <ImagePropertiesPanel obj={selectedObj} slideId={slide.id} />
         ) : (
           <SelectedObjectEditor obj={selectedObj} slideId={slide.id} />
         )

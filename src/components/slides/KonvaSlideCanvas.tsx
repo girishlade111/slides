@@ -1,10 +1,11 @@
 import React from 'react';
-import { Stage, Layer, Rect, Text, Circle, Line, Path, Transformer } from 'react-konva';
-import type { SlideData } from '@/data/slides';
+import { Stage, Layer, Rect, Text, Circle, Line, Path, Transformer, Image as KonvaImage } from 'react-konva';
+import type { SlideData, SlideObject } from '@/data/slides';
 import { useSlidesStore } from '@/store/useSlidesStore';
 import { getShapePath, isLineShape } from '@/lib/shapePaths';
 import type Konva from 'konva';
 import { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
+import useImage from 'use-image';
 
 const CANVAS_W = 960;
 const CANVAS_H = 540;
@@ -212,6 +213,19 @@ export const KonvaSlideCanvas = forwardRef<KonvaSlideCanvasHandle, KonvaSlideCan
               return renderShape(obj);
             }
 
+            if (obj.type === 'image' && obj.src) {
+              return (
+                <SlideImageObject
+                  key={obj.id}
+                  obj={obj}
+                  readOnly={readOnly}
+                  refSetter={refSetter}
+                  commonEvents={commonEvents}
+                  shadowProps={shadowProps}
+                />
+              );
+            }
+
             const fontSize = obj.fontSize ?? (obj.type === 'title' ? 44 : obj.type === 'subtitle' ? 28 : 22);
             const isBold = obj.fontWeight === 'bold' || obj.type === 'title';
             const isItalic = obj.fontStyle === 'italic';
@@ -273,3 +287,52 @@ export const KonvaSlideCanvas = forwardRef<KonvaSlideCanvasHandle, KonvaSlideCan
     );
   }
 );
+
+// Separate component for image rendering (uses hooks)
+interface SlideImageObjectProps {
+  obj: SlideObject;
+  readOnly: boolean;
+  refSetter: (id: string) => (node: Konva.Node | null) => void;
+  commonEvents: (id: string) => Record<string, unknown>;
+  shadowProps: (obj: { shadow?: { enabled: boolean; color: string; blur: number; offsetX: number; offsetY: number } }) => Record<string, unknown>;
+}
+
+function SlideImageObject({ obj, readOnly, refSetter, commonEvents, shadowProps }: SlideImageObjectProps) {
+  const [image] = useImage(obj.src ?? '', 'anonymous');
+  
+  const border = obj.border ?? { enabled: false, color: '#1E40AF', width: 2 };
+
+  if (!image) return null;
+
+  return (
+    <React.Fragment>
+      {/* Border background */}
+      {border.enabled && (
+        <Rect
+          x={obj.x - border.width}
+          y={obj.y - border.width}
+          width={obj.width + border.width * 2}
+          height={obj.height + border.width * 2}
+          fill={border.color}
+          cornerRadius={(obj.cornerRadius ?? 0) + border.width}
+          rotation={obj.rotation ?? 0}
+          listening={false}
+        />
+      )}
+      <KonvaImage
+        ref={refSetter(obj.id) as React.LegacyRef<Konva.Image>}
+        image={image}
+        x={obj.x}
+        y={obj.y}
+        width={obj.width}
+        height={obj.height}
+        rotation={obj.rotation ?? 0}
+        opacity={obj.imgOpacity ?? 1}
+        cornerRadius={obj.cornerRadius ?? 0}
+        draggable={!readOnly}
+        {...shadowProps(obj)}
+        {...commonEvents(obj.id)}
+      />
+    </React.Fragment>
+  );
+}
