@@ -6,6 +6,7 @@ interface SlideViewProps {
 }
 
 export function SlideView({ slide }: SlideViewProps) {
+  if (!slide) return null;
   return (
     <div className="flex flex-col items-center justify-center flex-1 px-8 py-12 text-center gap-4">
       {slide.objects.map((obj) => {
