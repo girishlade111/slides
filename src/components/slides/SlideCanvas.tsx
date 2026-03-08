@@ -165,7 +165,7 @@ export function SlideCanvas({
   return (
     <SlideScaleContext.Provider value={finalScale}>
       <div 
-        className="relative flex flex-col h-full w-full bg-[hsl(var(--canvas-bg))]"
+        className="relative flex flex-col h-full w-full bg-[#e8e8e8]"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
       >
