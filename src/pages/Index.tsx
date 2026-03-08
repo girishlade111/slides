@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
-import { SlideView } from '@/components/SlideView';
 import { SlideList } from '@/components/SlideList';
 import { SlideEditor } from '@/components/SlideEditor';
 import { SlideActions } from '@/components/SlideActions';
+import { KonvaSlideCanvas } from '@/components/slides/KonvaSlideCanvas';
 import { useSlidesStore } from '@/store/useSlidesStore';
 
 export default function Index() {
@@ -10,7 +10,7 @@ export default function Index() {
     slides, currentIndex, setCurrentIndex,
     goNext, goPrev,
     addSlide, deleteSlide, moveSlideUp, moveSlideDown,
-    reorderSlides, updateObjectText, addBodyObject, deleteObject,
+    reorderSlides,
   } = useSlidesStore();
 
   const currentSlide = slides[currentIndex];
@@ -28,6 +28,7 @@ export default function Index() {
 
   return (
     <div className="h-screen flex bg-background">
+      {/* Sidebar */}
       <div className="w-60 flex flex-col border-r border-border">
         <SlideActions
           onAdd={addSlide}
@@ -46,40 +47,35 @@ export default function Index() {
         />
       </div>
 
+      {/* Canvas area */}
       <div className="flex-1 flex flex-col">
-        <div className="flex-1 flex items-center justify-center p-6">
-          <div className="w-full max-w-3xl bg-card rounded-2xl shadow-lg border border-border flex flex-col overflow-hidden">
-            <SlideView slide={currentSlide} />
+        <div className="flex-1 flex items-center justify-center p-6 bg-muted/20">
+          <KonvaSlideCanvas slide={currentSlide} />
+        </div>
 
-            <div className="flex items-center justify-between px-8 py-5 border-t border-border bg-muted/30">
-              <button
-                onClick={goPrev}
-                disabled={currentIndex === 0}
-                className="px-5 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
-              >
-                Previous
-              </button>
-              <span className="text-sm text-muted-foreground font-medium">
-                Slide {currentIndex + 1} of {totalSlides}
-              </span>
-              <button
-                onClick={goNext}
-                disabled={currentIndex === totalSlides - 1}
-                className="px-5 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
-              >
-                Next
-              </button>
-            </div>
-          </div>
+        <div className="flex items-center justify-between px-8 py-3 border-t border-border bg-muted/30">
+          <button
+            onClick={goPrev}
+            disabled={currentIndex === 0}
+            className="px-5 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+          >
+            Previous
+          </button>
+          <span className="text-sm text-muted-foreground font-medium">
+            Slide {currentIndex + 1} of {totalSlides}
+          </span>
+          <button
+            onClick={goNext}
+            disabled={currentIndex === totalSlides - 1}
+            className="px-5 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+          >
+            Next
+          </button>
         </div>
       </div>
 
-      <SlideEditor
-        slide={currentSlide}
-        onUpdateText={(objectId, text) => updateObjectText(currentSlide.id, objectId, text)}
-        onAddBody={() => addBodyObject(currentSlide.id)}
-        onDeleteObject={(objectId) => deleteObject(currentSlide.id, objectId)}
-      />
+      {/* Properties panel */}
+      <SlideEditor />
     </div>
   );
 }
