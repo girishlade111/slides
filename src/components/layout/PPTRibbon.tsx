@@ -472,8 +472,8 @@ function ReviewRibbon() {
   );
 }
 
-function ViewRibbon({ showGrid, onToggleGrid, showNotes, onToggleNotes, isDarkMode, onToggleDarkMode }: {
-  showGrid: boolean; onToggleGrid: () => void; showNotes?: boolean; onToggleNotes?: () => void; isDarkMode?: boolean; onToggleDarkMode?: () => void;
+function ViewRibbon({ showGrid, onToggleGrid, showNotes, onToggleNotes, isDarkMode, onToggleDarkMode, onToggleMasterEditor }: {
+  showGrid: boolean; onToggleGrid: () => void; showNotes?: boolean; onToggleNotes?: () => void; isDarkMode?: boolean; onToggleDarkMode?: () => void; onToggleMasterEditor?: () => void;
 }) {
   return (
     <>
