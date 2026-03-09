@@ -30,6 +30,7 @@ interface PPTRibbonProps {
   onStartPresenterView?: () => void;
   onAddSlide?: () => void;
   isEditable?: boolean;
+  onToggleMasterEditor?: () => void;
 }
 
 const LADE_TEAL = 'hsl(174, 80%, 41%)';
