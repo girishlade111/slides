@@ -207,11 +207,7 @@ function HomeRibbon({ onAddSlide, isEditable }: { onAddSlide?: () => void; isEdi
             <LayoutGrid className="w-4 h-4 text-[#20B2AA]" strokeWidth={1.5} />
             New Slide
           </button>
-          <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md hover:bg-[#f0f0f0] text-[11px] text-[#444] font-medium">
-            <SplitSquareHorizontal className="w-4 h-4" strokeWidth={1.5} />
-            Layout
-            <ChevronDown className="w-3 h-3 text-[#999]" />
-          </button>
+          <LayoutSelector />
         </div>
       </RibbonGroup>
 
