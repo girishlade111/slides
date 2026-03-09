@@ -4,7 +4,7 @@ import type { SlideData, SlideObject, SlideBackground } from '@/data/slides';
 import { useSlidesStore } from '@/store/useSlidesStore';
 import { getShapePath, isLineShape } from '@/lib/shapePaths';
 import type Konva from 'konva';
-import { useRef, useEffect, useImperativeHandle, forwardRef, useState, useCallback } from 'react';
+import { useRef, useEffect, useImperativeHandle, forwardRef, useState } from 'react';
 import useImage from 'use-image';
 
 const CANVAS_W = 960;
