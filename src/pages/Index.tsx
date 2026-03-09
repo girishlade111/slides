@@ -20,6 +20,8 @@ import { SaveAsDialog } from '@/components/dialogs/SaveAsDialog';
 import { NewPresentationDialog } from '@/components/dialogs/NewPresentationDialog';
 import { PresentationSettingsDialog } from '@/components/dialogs/PresentationSettingsDialog';
 import { useSlidesStore } from '@/store/useSlidesStore';
+import { MasterSlideEditor } from '@/components/MasterSlideEditor';
+import { LayoutSelector } from '@/components/LayoutSelector';
 import { saveToStorage } from '@/lib/storage';
 import {
   DropdownMenu,
