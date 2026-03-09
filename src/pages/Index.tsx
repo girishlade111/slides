@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Check, Loader2, Palette, Play, Plus, Sparkles, ArrowRightLeft } from 'lucide-react';
+import { Check, Download, Loader2, Palette, Play, Plus, Sparkles, ArrowRightLeft } from 'lucide-react';
 import { SlideEditor } from '@/components/SlideEditor';
 import { FileMenu } from '@/components/FileMenu';
 import { SlideSidebar } from '@/components/SlideSidebar';
