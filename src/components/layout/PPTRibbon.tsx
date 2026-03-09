@@ -482,6 +482,9 @@ function ViewRibbon({ showGrid, onToggleGrid, showNotes, onToggleNotes, isDarkMo
         <RibbonButton icon={Grid3X3} label="Slide Sorter" large onClick={onToggleGrid} active={showGrid} />
         <RibbonButton icon={Eye} label="Reading View" large />
       </RibbonGroup>
+      <RibbonGroup label="Master Views">
+        <RibbonButton icon={Layers} label="Master Slides" large accent onClick={onToggleMasterEditor} />
+      </RibbonGroup>
       <RibbonGroup label="Show">
         <div className="flex flex-col gap-1.5">
           {onToggleNotes && (
