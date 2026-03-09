@@ -85,7 +85,7 @@ export function PPTRibbon({
         )}
         {activeTab === 'Review' && <ReviewRibbon />}
         {activeTab === 'View' && (
-          <ViewRibbon showGrid={showGrid} onToggleGrid={onToggleGrid} showNotes={showNotes} onToggleNotes={onToggleNotes} isDarkMode={isDarkMode} onToggleDarkMode={onToggleDarkMode} />
+          <ViewRibbon showGrid={showGrid} onToggleGrid={onToggleGrid} showNotes={showNotes} onToggleNotes={onToggleNotes} isDarkMode={isDarkMode} onToggleDarkMode={onToggleDarkMode} onToggleMasterEditor={onToggleMasterEditor} />
         )}
         {activeTab === 'File' && <FileRibbon />}
       </div>
