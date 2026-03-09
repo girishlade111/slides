@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Check, Download, Loader2, Palette, Play, Plus, Sparkles, ArrowRightLeft } from 'lucide-react';
+import { Check, Download, Loader2, Palette, Play, Plus, Sparkles, ArrowRightLeft, Monitor } from 'lucide-react';
 import { SlideEditor } from '@/components/SlideEditor';
 import { FileMenu } from '@/components/FileMenu';
 import { SlideSidebar } from '@/components/SlideSidebar';
@@ -14,12 +14,19 @@ import { AnimationsPanel } from '@/components/AnimationsPanel';
 import { ExportDialog } from '@/components/ExportDialog';
 import { KonvaSlideCanvas, type KonvaSlideCanvasHandle } from '@/components/slides/KonvaSlideCanvas';
 import { PresentationOverlay } from '@/components/slides/PresentationOverlay';
+import { PresenterModeView } from '@/components/slides/PresenterModeView';
 import { OpenPresentationDialog } from '@/components/dialogs/OpenPresentationDialog';
 import { SaveAsDialog } from '@/components/dialogs/SaveAsDialog';
 import { NewPresentationDialog } from '@/components/dialogs/NewPresentationDialog';
 import { PresentationSettingsDialog } from '@/components/dialogs/PresentationSettingsDialog';
 import { useSlidesStore } from '@/store/useSlidesStore';
 import { saveToStorage } from '@/lib/storage';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export default function Index() {
   const {
@@ -33,7 +40,7 @@ export default function Index() {
 
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving'>('saved');
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
-  const [presenting, setPresenting] = useState(false);
+  const [presentMode, setPresentMode] = useState<'none' | 'normal' | 'presenter'>('none');
 
   const [showNew, setShowNew] = useState(false);
   const [showOpen, setShowOpen] = useState(false);
@@ -63,13 +70,20 @@ export default function Index() {
 
   // Keyboard shortcuts
   useEffect(() => {
-    if (presenting) return;
+    if (presentMode !== 'none') return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
 
       const mod = e.metaKey || e.ctrlKey;
 
       if (mod && e.key === 's') { e.preventDefault(); saveCurrent(); return; }
+
+      // F5 → present
+      if (e.key === 'F5') {
+        e.preventDefault();
+        setPresentMode(e.shiftKey ? 'presenter' : 'normal');
+        return;
+      }
 
       // Text formatting shortcuts
       if (mod && isTextSelected && currentSlide) {
@@ -110,7 +124,7 @@ export default function Index() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [goNext, goPrev, presenting, saveCurrent, isTextSelected, selectedObj, currentSlide, selectedObjectId, selectedObjectIds, updateObjectStyle]);
+  }, [goNext, goPrev, presentMode, saveCurrent, isTextSelected, selectedObj, currentSlide, selectedObjectId, selectedObjectIds, updateObjectStyle]);
 
   const handleExportPng = useCallback(() => {
     const stage = canvasRef.current?.getStage();
@@ -203,13 +217,34 @@ export default function Index() {
             <Download className="w-3 h-3" />
             Export
           </button>
-          <button
-            onClick={() => setPresenting(true)}
-            className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            <Play className="w-3 h-3" />
-            Present
-          </button>
+
+          {/* Present button with dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                <Play className="w-3 h-3" />
+                Present
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => setPresentMode('normal')}>
+                <Play className="w-4 h-4 mr-2" />
+                <div className="flex flex-col">
+                  <span>Present</span>
+                  <span className="text-xs text-muted-foreground">Fullscreen audience view (F5)</span>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setPresentMode('presenter')}>
+                <Monitor className="w-4 h-4 mr-2" />
+                <div className="flex flex-col">
+                  <span>Presenter View</span>
+                  <span className="text-xs text-muted-foreground">Notes, timer & controls (Shift+F5)</span>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -256,8 +291,12 @@ export default function Index() {
         <SlideEditor />
       </div>
 
-      {presenting && (
-        <PresentationOverlay slides={slides} startIndex={currentIndex} onClose={() => setPresenting(false)} />
+      {/* Presentation modes */}
+      {presentMode === 'normal' && (
+        <PresentationOverlay slides={slides} startIndex={currentIndex} onClose={() => setPresentMode('none')} />
+      )}
+      {presentMode === 'presenter' && (
+        <PresenterModeView slides={slides} startIndex={currentIndex} onClose={() => setPresentMode('none')} />
       )}
 
       <NewPresentationDialog open={showNew} onOpenChange={setShowNew} />
