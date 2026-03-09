@@ -1,3 +1,5 @@
+import type { SlideTransition, ObjectAnimation } from '@/data/animations';
+
 export type ShapeType =
   | 'rectangle' | 'rounded-rectangle' | 'circle' | 'triangle' | 'diamond'
   | 'pentagon' | 'hexagon' | 'octagon' | 'star' | 'heart' | 'cloud'
@@ -106,11 +108,17 @@ export interface SlideBackground {
   };
 }
 
+export interface SlideAnimations {
+  [objectId: string]: ObjectAnimation[];
+}
+
 export interface SlideData {
   id: string;
   name: string;
   objects: SlideObject[];
   background?: SlideBackground;
+  transition?: SlideTransition;
+  animations?: SlideAnimations;
 }
 
 export function getSlideName(slide: SlideData): string {

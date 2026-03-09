@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Check, Loader2, Palette, Play, Plus } from 'lucide-react';
+import { Check, Loader2, Palette, Play, Plus, Sparkles, ArrowRightLeft } from 'lucide-react';
 import { SlideEditor } from '@/components/SlideEditor';
 import { FileMenu } from '@/components/FileMenu';
 import { SlideSidebar } from '@/components/SlideSidebar';
@@ -9,6 +9,8 @@ import { TextFormattingToolbar } from '@/components/TextFormattingToolbar';
 import { SlideBackgroundEditor } from '@/components/SlideBackgroundEditor';
 import { AlignmentToolbar } from '@/components/AlignmentToolbar';
 import { ThemesPanel } from '@/components/ThemesPanel';
+import { TransitionsPanel } from '@/components/TransitionsPanel';
+import { AnimationsPanel } from '@/components/AnimationsPanel';
 import { KonvaSlideCanvas, type KonvaSlideCanvasHandle } from '@/components/slides/KonvaSlideCanvas';
 import { PresentationOverlay } from '@/components/slides/PresentationOverlay';
 import { OpenPresentationDialog } from '@/components/dialogs/OpenPresentationDialog';
@@ -38,6 +40,8 @@ export default function Index() {
   const [showSettings, setShowSettings] = useState(false);
   const [showBgEditor, setShowBgEditor] = useState(false);
   const [showThemes, setShowThemes] = useState(false);
+  const [showTransitions, setShowTransitions] = useState(false);
+  const [showAnimations, setShowAnimations] = useState(false);
 
   const selectedObj = selectedObjectId && currentSlide
     ? currentSlide.objects.find((o) => o.id === selectedObjectId)
@@ -174,6 +178,22 @@ export default function Index() {
             Themes
           </button>
           <button
+            onClick={() => setShowTransitions(true)}
+            className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md border border-border text-foreground hover:bg-muted transition-colors"
+            title="Slide Transitions"
+          >
+            <ArrowRightLeft className="w-3 h-3" />
+            Transitions
+          </button>
+          <button
+            onClick={() => setShowAnimations(true)}
+            className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md border border-border text-foreground hover:bg-muted transition-colors"
+            title="Object Animations"
+          >
+            <Sparkles className="w-3 h-3" />
+            Animations
+          </button>
+          <button
             onClick={() => setPresenting(true)}
             className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
@@ -236,6 +256,8 @@ export default function Index() {
       <PresentationSettingsDialog open={showSettings} onOpenChange={setShowSettings} />
       <SlideBackgroundEditor open={showBgEditor} onClose={() => setShowBgEditor(false)} />
       <ThemesPanel open={showThemes} onClose={() => setShowThemes(false)} />
+      <TransitionsPanel open={showTransitions} onClose={() => setShowTransitions(false)} />
+      <AnimationsPanel open={showAnimations} onClose={() => setShowAnimations(false)} />
     </div>
   );
 }
