@@ -14,8 +14,9 @@ import {
   PenTool, ArrowRight, Star, Hexagon,
   Upload, Film, BarChart3, PieChart,
   Sparkles, Zap, Clock, Eye,
-  Columns, SplitSquareHorizontal,
+  Columns, SplitSquareHorizontal, Layers,
 } from 'lucide-react';
+import { LayoutSelector } from '@/components/LayoutSelector';
 import { toast } from '@/hooks/use-toast';
 
 interface PPTRibbonProps {
