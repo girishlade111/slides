@@ -4,7 +4,7 @@ import {
   AlignHorizontalSpaceAround, AlignVerticalSpaceAround,
   MoveHorizontal, MoveVertical,
   ArrowUpToLine, ArrowDownToLine, ChevronUp, ChevronDown,
-  RulerIcon, Copy,
+  Copy,
 } from 'lucide-react';
 import { useSlidesStore } from '@/store/useSlidesStore';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
