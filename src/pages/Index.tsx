@@ -268,6 +268,7 @@ export default function Index() {
       <ThemesPanel open={showThemes} onClose={() => setShowThemes(false)} />
       <TransitionsPanel open={showTransitions} onClose={() => setShowTransitions(false)} />
       <AnimationsPanel open={showAnimations} onClose={() => setShowAnimations(false)} />
+      <ExportDialog open={showExport} onOpenChange={setShowExport} />
     </div>
   );
 }

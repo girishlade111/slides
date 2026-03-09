@@ -14,7 +14,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { useSlidesStore } from '@/store/useSlidesStore';
-import { exportToPDF, createOffscreenSlideContainer, removeOffscreenContainer } from '@/lib/exportPDF';
+import { createOffscreenSlideContainer, removeOffscreenContainer } from '@/lib/exportPDF';
 import { exportToPPTX } from '@/lib/exportPPTX';
 import { exportToPNG } from '@/lib/exportPNG';
 import { exportToHTML } from '@/lib/exportHTML';
