@@ -180,6 +180,9 @@ export default function Index() {
         </div>
       )}
 
+      {/* Alignment toolbar */}
+      <AlignmentToolbar />
+
       {/* Main layout */}
       <div className="flex-1 flex min-h-0">
         <SlideSidebar />
