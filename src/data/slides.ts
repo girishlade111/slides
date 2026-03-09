@@ -1,3 +1,5 @@
+import type { SlideTransition, ObjectAnimation } from '@/data/animations';
+
 export type ShapeType =
   | 'rectangle' | 'rounded-rectangle' | 'circle' | 'triangle' | 'diamond'
   | 'pentagon' | 'hexagon' | 'octagon' | 'star' | 'heart' | 'cloud'
