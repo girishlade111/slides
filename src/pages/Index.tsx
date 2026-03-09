@@ -221,7 +221,17 @@ export default function Index() {
             Export
           </button>
 
-          {/* Present button with dropdown */}
+          <button
+            onClick={() => setShowMasterEditor(true)}
+            className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md border border-border text-foreground hover:bg-muted transition-colors"
+            title="Master Slides"
+          >
+            <Layers className="w-3 h-3" />
+            Master Slides
+          </button>
+
+          {/* Layout selector */}
+          <LayoutSelector />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
