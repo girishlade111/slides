@@ -20,18 +20,27 @@ function deepCloneSlide(slide: SlideData): SlideData {
   };
 }
 
+type AlignType = 'left' | 'center-h' | 'right' | 'top' | 'center-v' | 'bottom';
+type DistributeType = 'horizontal' | 'vertical' | 'left-edges' | 'right-edges' | 'top-edges' | 'bottom-edges';
+type MatchSizeType = 'width' | 'height' | 'both';
+type ReorderDirection = 'front' | 'back' | 'forward' | 'backward';
+
 interface SlidesState {
   presentationId: string | null;
   presentationMeta: PresentationMeta | null;
   slides: SlideData[];
   currentIndex: number;
   selectedObjectId: string | null;
+  selectedObjectIds: string[];
   clipboardSlide: SlideData | null;
 
   setCurrentIndex: (index: number) => void;
   goNext: () => void;
   goPrev: () => void;
   setSelectedObjectId: (id: string | null) => void;
+  toggleObjectSelection: (id: string) => void;
+  selectMultipleObjects: (ids: string[]) => void;
+  clearSelection: () => void;
 
   setSlides: (slides: SlideData[]) => void;
   updateSlideName: (slideId: string, name: string) => void;
@@ -57,6 +66,12 @@ interface SlidesState {
   updateSlideBackground: (slideId: string, bg: SlideBackground) => void;
   applyBackgroundToAll: (bg: SlideBackground) => void;
   resetSlideBackground: (slideId: string) => void;
+
+  // Alignment & arrangement
+  alignObjects: (slideId: string, objectIds: string[], alignType: AlignType) => void;
+  distributeObjects: (slideId: string, objectIds: string[], distributeType: DistributeType) => void;
+  matchObjectSize: (slideId: string, objectIds: string[], dimension: MatchSizeType) => void;
+  reorderObject: (slideId: string, objectId: string, direction: ReorderDirection) => void;
 
   newPresentation: (name: string) => void;
   openPresentation: (id: string) => void;
