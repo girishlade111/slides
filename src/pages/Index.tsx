@@ -196,6 +196,14 @@ export default function Index() {
             Animations
           </button>
           <button
+            onClick={() => setShowExport(true)}
+            className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md border border-border text-foreground hover:bg-muted transition-colors"
+            title="Export Presentation"
+          >
+            <Download className="w-3 h-3" />
+            Export
+          </button>
+          <button
             onClick={() => setPresenting(true)}
             className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
