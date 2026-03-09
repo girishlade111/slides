@@ -122,7 +122,7 @@ export function AnimationsPanel({ open, onClose }: AnimationsPanelProps) {
               {effectsList.map(eff => (
                 <button
                   key={eff.value}
-                  onClick={() => addAnimation(eff.value, 'directions' in eff ? eff.directions : undefined)}
+                  onClick={() => addAnimation(eff.value, 'directions' in eff ? (eff as any).directions : undefined)}
                   className="px-2 py-1.5 text-[10px] rounded border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors text-left"
                 >
                   {eff.label}
