@@ -37,6 +37,7 @@ export default function Index() {
   const [showSaveAs, setShowSaveAs] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showBgEditor, setShowBgEditor] = useState(false);
+  const [showThemes, setShowThemes] = useState(false);
 
   const selectedObj = selectedObjectId && currentSlide
     ? currentSlide.objects.find((o) => o.id === selectedObjectId)
