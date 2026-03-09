@@ -9,6 +9,8 @@ import { TextFormattingToolbar } from '@/components/TextFormattingToolbar';
 import { SlideBackgroundEditor } from '@/components/SlideBackgroundEditor';
 import { AlignmentToolbar } from '@/components/AlignmentToolbar';
 import { ThemesPanel } from '@/components/ThemesPanel';
+import { TransitionsPanel } from '@/components/TransitionsPanel';
+import { AnimationsPanel } from '@/components/AnimationsPanel';
 import { KonvaSlideCanvas, type KonvaSlideCanvasHandle } from '@/components/slides/KonvaSlideCanvas';
 import { PresentationOverlay } from '@/components/slides/PresentationOverlay';
 import { OpenPresentationDialog } from '@/components/dialogs/OpenPresentationDialog';
