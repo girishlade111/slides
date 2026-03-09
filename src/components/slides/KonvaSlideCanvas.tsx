@@ -4,11 +4,12 @@ import type { SlideData, SlideObject, SlideBackground } from '@/data/slides';
 import { useSlidesStore } from '@/store/useSlidesStore';
 import { getShapePath, isLineShape } from '@/lib/shapePaths';
 import type Konva from 'konva';
-import { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
+import { useRef, useEffect, useImperativeHandle, forwardRef, useState } from 'react';
 import useImage from 'use-image';
 
 const CANVAS_W = 960;
 const CANVAS_H = 540;
+const SNAP_THRESHOLD = 5;
 
 export interface KonvaSlideCanvasHandle {
   getStage: () => Konva.Stage | null;
@@ -17,6 +18,11 @@ export interface KonvaSlideCanvasHandle {
 interface KonvaSlideCanvasProps {
   slide: SlideData;
   readOnly?: boolean;
+}
+
+interface GuideLine {
+  points: number[];
+  orientation: 'h' | 'v';
 }
 
 function getDash(style?: string, strokeWidth?: number): number[] | undefined {
@@ -28,10 +34,11 @@ function getDash(style?: string, strokeWidth?: number): number[] | undefined {
 
 export const KonvaSlideCanvas = forwardRef<KonvaSlideCanvasHandle, KonvaSlideCanvasProps>(
   function KonvaSlideCanvas({ slide, readOnly = false }, ref) {
-    const { selectedObjectId, setSelectedObjectId, setObjectPosition, updateObjectStyle } = useSlidesStore();
+    const { selectedObjectId, selectedObjectIds, setSelectedObjectId, toggleObjectSelection, setObjectPosition, updateObjectStyle } = useSlidesStore();
     const stageRef = useRef<Konva.Stage>(null);
     const transformerRef = useRef<Konva.Transformer>(null);
     const nodeRefs = useRef<Record<string, Konva.Node>>({});
+    const [guides, setGuides] = useState<GuideLine[]>([]);
 
     useImperativeHandle(ref, () => ({
       getStage: () => stageRef.current,
@@ -39,16 +46,80 @@ export const KonvaSlideCanvas = forwardRef<KonvaSlideCanvasHandle, KonvaSlideCan
 
     useEffect(() => {
       if (readOnly || !transformerRef.current) return;
-      const node = selectedObjectId ? nodeRefs.current[selectedObjectId] : null;
-      transformerRef.current.nodes(node ? [node] : []);
+      const ids = selectedObjectIds.length > 0 ? selectedObjectIds : selectedObjectId ? [selectedObjectId] : [];
+      const nodes = ids.map(id => nodeRefs.current[id]).filter(Boolean);
+      transformerRef.current.nodes(nodes);
       transformerRef.current.getLayer()?.batchDraw();
-    }, [selectedObjectId, slide?.objects, readOnly]);
+    }, [selectedObjectId, selectedObjectIds, slide?.objects, readOnly]);
 
     if (!slide) return null;
+
+    const getSmartGuides = (dragId: string, x: number, y: number, w: number, h: number): GuideLine[] => {
+      const lines: GuideLine[] = [];
+      const others = slide.objects.filter(o => o.id !== dragId);
+      const dragCx = x + w / 2;
+      const dragCy = y + h / 2;
+      const dragRight = x + w;
+      const dragBottom = y + h;
+
+      // Canvas center guides
+      if (Math.abs(dragCx - CANVAS_W / 2) < SNAP_THRESHOLD)
+        lines.push({ points: [CANVAS_W / 2, 0, CANVAS_W / 2, CANVAS_H], orientation: 'v' });
+      if (Math.abs(dragCy - CANVAS_H / 2) < SNAP_THRESHOLD)
+        lines.push({ points: [0, CANVAS_H / 2, CANVAS_W, CANVAS_H / 2], orientation: 'h' });
+
+      // Canvas edge guides
+      if (Math.abs(x) < SNAP_THRESHOLD) lines.push({ points: [0, 0, 0, CANVAS_H], orientation: 'v' });
+      if (Math.abs(dragRight - CANVAS_W) < SNAP_THRESHOLD) lines.push({ points: [CANVAS_W, 0, CANVAS_W, CANVAS_H], orientation: 'v' });
+      if (Math.abs(y) < SNAP_THRESHOLD) lines.push({ points: [0, 0, CANVAS_W, 0], orientation: 'h' });
+      if (Math.abs(dragBottom - CANVAS_H) < SNAP_THRESHOLD) lines.push({ points: [0, CANVAS_H, CANVAS_W, CANVAS_H], orientation: 'h' });
+
+      for (const other of others) {
+        const oCx = other.x + other.width / 2;
+        const oCy = other.y + other.height / 2;
+        const oRight = other.x + other.width;
+        const oBottom = other.y + other.height;
+
+        // Vertical guides (x alignment)
+        if (Math.abs(x - other.x) < SNAP_THRESHOLD)
+          lines.push({ points: [other.x, Math.min(y, other.y), other.x, Math.max(dragBottom, oBottom)], orientation: 'v' });
+        if (Math.abs(dragRight - oRight) < SNAP_THRESHOLD)
+          lines.push({ points: [oRight, Math.min(y, other.y), oRight, Math.max(dragBottom, oBottom)], orientation: 'v' });
+        if (Math.abs(dragCx - oCx) < SNAP_THRESHOLD)
+          lines.push({ points: [oCx, Math.min(y, other.y), oCx, Math.max(dragBottom, oBottom)], orientation: 'v' });
+        if (Math.abs(x - oRight) < SNAP_THRESHOLD)
+          lines.push({ points: [oRight, Math.min(y, other.y), oRight, Math.max(dragBottom, oBottom)], orientation: 'v' });
+        if (Math.abs(dragRight - other.x) < SNAP_THRESHOLD)
+          lines.push({ points: [other.x, Math.min(y, other.y), other.x, Math.max(dragBottom, oBottom)], orientation: 'v' });
+
+        // Horizontal guides (y alignment)
+        if (Math.abs(y - other.y) < SNAP_THRESHOLD)
+          lines.push({ points: [Math.min(x, other.x), other.y, Math.max(dragRight, oRight), other.y], orientation: 'h' });
+        if (Math.abs(dragBottom - oBottom) < SNAP_THRESHOLD)
+          lines.push({ points: [Math.min(x, other.x), oBottom, Math.max(dragRight, oRight), oBottom], orientation: 'h' });
+        if (Math.abs(dragCy - oCy) < SNAP_THRESHOLD)
+          lines.push({ points: [Math.min(x, other.x), oCy, Math.max(dragRight, oRight), oCy], orientation: 'h' });
+        if (Math.abs(y - oBottom) < SNAP_THRESHOLD)
+          lines.push({ points: [Math.min(x, other.x), oBottom, Math.max(dragRight, oRight), oBottom], orientation: 'h' });
+        if (Math.abs(dragBottom - other.y) < SNAP_THRESHOLD)
+          lines.push({ points: [Math.min(x, other.x), other.y, Math.max(dragRight, oRight), other.y], orientation: 'h' });
+      }
+      return lines;
+    };
+
+    const handleDragMove = (objectId: string, e: Konva.KonvaEventObject<DragEvent>) => {
+      if (readOnly) return;
+      const node = e.target;
+      const obj = slide.objects.find(o => o.id === objectId);
+      if (!obj) return;
+      const newGuides = getSmartGuides(objectId, node.x(), node.y(), obj.width, obj.height);
+      setGuides(newGuides);
+    };
 
     const handleDragEnd = (objectId: string, e: Konva.KonvaEventObject<DragEvent>) => {
       const node = e.target;
       setObjectPosition(slide.id, objectId, Math.round(node.x()), Math.round(node.y()));
+      setGuides([]);
     };
 
     const handleTransformEnd = (objectId: string, e: Konva.KonvaEventObject<Event>) => {
@@ -68,7 +139,7 @@ export const KonvaSlideCanvas = forwardRef<KonvaSlideCanvasHandle, KonvaSlideCan
     const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
       if (readOnly) return;
       if (e.target === e.target.getStage()) {
-        setSelectedObjectId(null);
+        useSlidesStore.getState().clearSelection();
       }
     };
 
@@ -78,8 +149,17 @@ export const KonvaSlideCanvas = forwardRef<KonvaSlideCanvasHandle, KonvaSlideCan
     };
 
     const commonEvents = (id: string) => readOnly ? {} : ({
-      onClick: (e: Konva.KonvaEventObject<MouseEvent>) => { e.cancelBubble = true; setSelectedObjectId(id); },
+      onClick: (e: Konva.KonvaEventObject<MouseEvent>) => {
+        e.cancelBubble = true;
+        const nativeEvt = e.evt;
+        if (nativeEvt.shiftKey) {
+          toggleObjectSelection(id);
+        } else {
+          setSelectedObjectId(id);
+        }
+      },
       onTap: (e: Konva.KonvaEventObject<Event>) => { e.cancelBubble = true; setSelectedObjectId(id); },
+      onDragMove: (e: Konva.KonvaEventObject<DragEvent>) => handleDragMove(id, e),
       onDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => handleDragEnd(id, e),
       onTransformEnd: (e: Konva.KonvaEventObject<Event>) => handleTransformEnd(id, e),
     });
@@ -111,7 +191,6 @@ export const KonvaSlideCanvas = forwardRef<KonvaSlideCanvasHandle, KonvaSlideCan
         ...commonEvents(obj.id),
       };
 
-      // Line types
       if (isLineShape(shapeType)) {
         let points: number[];
         if (shapeType === 'elbow-connector') {
@@ -135,7 +214,6 @@ export const KonvaSlideCanvas = forwardRef<KonvaSlideCanvasHandle, KonvaSlideCan
         );
       }
 
-      // Path-based shapes
       const pathData = getShapePath(shapeType, obj.width, obj.height);
       if (pathData) {
         return (
@@ -156,7 +234,6 @@ export const KonvaSlideCanvas = forwardRef<KonvaSlideCanvasHandle, KonvaSlideCan
         );
       }
 
-      // Circle / Ellipse
       if (shapeType === 'circle') {
         return (
           <Circle
@@ -174,7 +251,6 @@ export const KonvaSlideCanvas = forwardRef<KonvaSlideCanvasHandle, KonvaSlideCan
         );
       }
 
-      // Rounded rect types
       const cornerRadius = (shapeType === 'rounded-rectangle' || shapeType === 'start-end') ? Math.min(obj.width, obj.height) * 0.25 : 0;
 
       return (
@@ -283,6 +359,22 @@ export const KonvaSlideCanvas = forwardRef<KonvaSlideCanvasHandle, KonvaSlideCan
             />
           )}
         </Layer>
+
+        {/* Smart guides layer */}
+        {!readOnly && guides.length > 0 && (
+          <Layer>
+            {guides.map((guide, i) => (
+              <Line
+                key={`guide-${i}`}
+                points={guide.points}
+                stroke="hsl(346, 84%, 61%)"
+                strokeWidth={1}
+                dash={[4, 4]}
+                listening={false}
+              />
+            ))}
+          </Layer>
+        )}
       </Stage>
     );
   }

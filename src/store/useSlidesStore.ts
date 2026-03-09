@@ -20,18 +20,27 @@ function deepCloneSlide(slide: SlideData): SlideData {
   };
 }
 
+type AlignType = 'left' | 'center-h' | 'right' | 'top' | 'center-v' | 'bottom';
+type DistributeType = 'horizontal' | 'vertical' | 'left-edges' | 'right-edges' | 'top-edges' | 'bottom-edges';
+type MatchSizeType = 'width' | 'height' | 'both';
+type ReorderDirection = 'front' | 'back' | 'forward' | 'backward';
+
 interface SlidesState {
   presentationId: string | null;
   presentationMeta: PresentationMeta | null;
   slides: SlideData[];
   currentIndex: number;
   selectedObjectId: string | null;
+  selectedObjectIds: string[];
   clipboardSlide: SlideData | null;
 
   setCurrentIndex: (index: number) => void;
   goNext: () => void;
   goPrev: () => void;
   setSelectedObjectId: (id: string | null) => void;
+  toggleObjectSelection: (id: string) => void;
+  selectMultipleObjects: (ids: string[]) => void;
+  clearSelection: () => void;
 
   setSlides: (slides: SlideData[]) => void;
   updateSlideName: (slideId: string, name: string) => void;
@@ -58,6 +67,12 @@ interface SlidesState {
   applyBackgroundToAll: (bg: SlideBackground) => void;
   resetSlideBackground: (slideId: string) => void;
 
+  // Alignment & arrangement
+  alignObjects: (slideId: string, objectIds: string[], alignType: AlignType) => void;
+  distributeObjects: (slideId: string, objectIds: string[], distributeType: DistributeType) => void;
+  matchObjectSize: (slideId: string, objectIds: string[], dimension: MatchSizeType) => void;
+  reorderObject: (slideId: string, objectId: string, direction: ReorderDirection) => void;
+
   newPresentation: (name: string) => void;
   openPresentation: (id: string) => void;
   saveCurrent: () => void;
@@ -74,21 +89,34 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
   slides: stored?.slides ?? initialSlides,
   currentIndex: stored?.currentIndex ?? 0,
   selectedObjectId: null,
+  selectedObjectIds: [],
   clipboardSlide: null,
 
-  setCurrentIndex: (index) => set({ currentIndex: index, selectedObjectId: null }),
+  setCurrentIndex: (index) => set({ currentIndex: index, selectedObjectId: null, selectedObjectIds: [] }),
 
   goNext: () => {
     const { currentIndex, slides } = get();
-    if (currentIndex < slides.length - 1) set({ currentIndex: currentIndex + 1, selectedObjectId: null });
+    if (currentIndex < slides.length - 1) set({ currentIndex: currentIndex + 1, selectedObjectId: null, selectedObjectIds: [] });
   },
 
   goPrev: () => {
     const { currentIndex } = get();
-    if (currentIndex > 0) set({ currentIndex: currentIndex - 1, selectedObjectId: null });
+    if (currentIndex > 0) set({ currentIndex: currentIndex - 1, selectedObjectId: null, selectedObjectIds: [] });
   },
 
-  setSelectedObjectId: (id) => set({ selectedObjectId: id }),
+  setSelectedObjectId: (id) => set({ selectedObjectId: id, selectedObjectIds: id ? [id] : [] }),
+  
+  toggleObjectSelection: (id) => {
+    const { selectedObjectIds } = get();
+    const newIds = selectedObjectIds.includes(id)
+      ? selectedObjectIds.filter(i => i !== id)
+      : [...selectedObjectIds, id];
+    set({ selectedObjectIds: newIds, selectedObjectId: newIds.length === 1 ? newIds[0] : newIds.length > 0 ? newIds[0] : null });
+  },
+
+  selectMultipleObjects: (ids) => set({ selectedObjectIds: ids, selectedObjectId: ids.length > 0 ? ids[0] : null }),
+  clearSelection: () => set({ selectedObjectId: null, selectedObjectIds: [] }),
+
   setSlides: (slides) => set({ slides }),
 
   updateSlideName: (slideId, name) => {
@@ -353,6 +381,184 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
     set((state) => ({
       slides: state.slides.map((s) => (s.id === slideId ? { ...s, background: undefined } : s)),
     }));
+  },
+
+  // ── Alignment & Arrangement ──
+
+  alignObjects: (slideId, objectIds, alignType) => {
+    set((state) => {
+      const slide = state.slides.find(s => s.id === slideId);
+      if (!slide) return state;
+      const objs = slide.objects.filter(o => objectIds.includes(o.id));
+      if (objs.length < 2) return state;
+
+      let updates: Record<string, Partial<SlideObject>> = {};
+      switch (alignType) {
+        case 'left': {
+          const minX = Math.min(...objs.map(o => o.x));
+          objs.forEach(o => { updates[o.id] = { x: minX }; });
+          break;
+        }
+        case 'center-h': {
+          const avgCenter = objs.reduce((s, o) => s + o.x + o.width / 2, 0) / objs.length;
+          objs.forEach(o => { updates[o.id] = { x: Math.round(avgCenter - o.width / 2) }; });
+          break;
+        }
+        case 'right': {
+          const maxRight = Math.max(...objs.map(o => o.x + o.width));
+          objs.forEach(o => { updates[o.id] = { x: maxRight - o.width }; });
+          break;
+        }
+        case 'top': {
+          const minY = Math.min(...objs.map(o => o.y));
+          objs.forEach(o => { updates[o.id] = { y: minY }; });
+          break;
+        }
+        case 'center-v': {
+          const avgMiddle = objs.reduce((s, o) => s + o.y + o.height / 2, 0) / objs.length;
+          objs.forEach(o => { updates[o.id] = { y: Math.round(avgMiddle - o.height / 2) }; });
+          break;
+        }
+        case 'bottom': {
+          const maxBottom = Math.max(...objs.map(o => o.y + o.height));
+          objs.forEach(o => { updates[o.id] = { y: maxBottom - o.height }; });
+          break;
+        }
+      }
+      return {
+        slides: state.slides.map(s => s.id !== slideId ? s : {
+          ...s,
+          objects: s.objects.map(o => updates[o.id] ? { ...o, ...updates[o.id] } : o),
+        }),
+      };
+    });
+  },
+
+  distributeObjects: (slideId, objectIds, distributeType) => {
+    set((state) => {
+      const slide = state.slides.find(s => s.id === slideId);
+      if (!slide) return state;
+      const objs = slide.objects.filter(o => objectIds.includes(o.id));
+      if (objs.length < 3) return state;
+
+      let updates: Record<string, Partial<SlideObject>> = {};
+      if (distributeType === 'horizontal' || distributeType === 'left-edges' || distributeType === 'right-edges') {
+        const sorted = [...objs].sort((a, b) => a.x - b.x);
+        if (distributeType === 'horizontal') {
+          const totalWidth = sorted.reduce((s, o) => s + o.width, 0);
+          const minX = sorted[0].x;
+          const maxRight = sorted[sorted.length - 1].x + sorted[sorted.length - 1].width;
+          const spacing = (maxRight - minX - totalWidth) / (sorted.length - 1);
+          let currentX = minX;
+          sorted.forEach(o => {
+            updates[o.id] = { x: Math.round(currentX) };
+            currentX += o.width + spacing;
+          });
+        } else if (distributeType === 'left-edges') {
+          const minX = sorted[0].x;
+          const maxX = sorted[sorted.length - 1].x;
+          const step = (maxX - minX) / (sorted.length - 1);
+          sorted.forEach((o, i) => { updates[o.id] = { x: Math.round(minX + step * i) }; });
+        } else {
+          const sortedByRight = [...objs].sort((a, b) => (a.x + a.width) - (b.x + b.width));
+          const minR = sortedByRight[0].x + sortedByRight[0].width;
+          const maxR = sortedByRight[sortedByRight.length - 1].x + sortedByRight[sortedByRight.length - 1].width;
+          const step = (maxR - minR) / (sortedByRight.length - 1);
+          sortedByRight.forEach((o, i) => { updates[o.id] = { x: Math.round(minR + step * i - o.width) }; });
+        }
+      } else {
+        const sorted = [...objs].sort((a, b) => a.y - b.y);
+        if (distributeType === 'vertical') {
+          const totalHeight = sorted.reduce((s, o) => s + o.height, 0);
+          const minY = sorted[0].y;
+          const maxBottom = sorted[sorted.length - 1].y + sorted[sorted.length - 1].height;
+          const spacing = (maxBottom - minY - totalHeight) / (sorted.length - 1);
+          let currentY = minY;
+          sorted.forEach(o => {
+            updates[o.id] = { y: Math.round(currentY) };
+            currentY += o.height + spacing;
+          });
+        } else if (distributeType === 'top-edges') {
+          const minY = sorted[0].y;
+          const maxY = sorted[sorted.length - 1].y;
+          const step = (maxY - minY) / (sorted.length - 1);
+          sorted.forEach((o, i) => { updates[o.id] = { y: Math.round(minY + step * i) }; });
+        } else {
+          const sortedByBottom = [...objs].sort((a, b) => (a.y + a.height) - (b.y + b.height));
+          const minB = sortedByBottom[0].y + sortedByBottom[0].height;
+          const maxB = sortedByBottom[sortedByBottom.length - 1].y + sortedByBottom[sortedByBottom.length - 1].height;
+          const step = (maxB - minB) / (sortedByBottom.length - 1);
+          sortedByBottom.forEach((o, i) => { updates[o.id] = { y: Math.round(minB + step * i - o.height) }; });
+        }
+      }
+      return {
+        slides: state.slides.map(s => s.id !== slideId ? s : {
+          ...s,
+          objects: s.objects.map(o => updates[o.id] ? { ...o, ...updates[o.id] } : o),
+        }),
+      };
+    });
+  },
+
+  matchObjectSize: (slideId, objectIds, dimension) => {
+    set((state) => {
+      const slide = state.slides.find(s => s.id === slideId);
+      if (!slide) return state;
+      const objs = slide.objects.filter(o => objectIds.includes(o.id));
+      if (objs.length < 2) return state;
+      const ref = objs[0];
+      const updates: Record<string, Partial<SlideObject>> = {};
+      objs.slice(1).forEach(o => {
+        if (dimension === 'width') updates[o.id] = { width: ref.width };
+        else if (dimension === 'height') updates[o.id] = { height: ref.height };
+        else updates[o.id] = { width: ref.width, height: ref.height };
+      });
+      return {
+        slides: state.slides.map(s => s.id !== slideId ? s : {
+          ...s,
+          objects: s.objects.map(o => updates[o.id] ? { ...o, ...updates[o.id] } : o),
+        }),
+      };
+    });
+  },
+
+  reorderObject: (slideId, objectId, direction) => {
+    set((state) => {
+      const slide = state.slides.find(s => s.id === slideId);
+      if (!slide) return state;
+      const objects = [...slide.objects];
+      const idx = objects.findIndex(o => o.id === objectId);
+      if (idx === -1) return state;
+
+      let newObjects = [...objects];
+      switch (direction) {
+        case 'front': {
+          const [obj] = newObjects.splice(idx, 1);
+          newObjects.push(obj);
+          break;
+        }
+        case 'back': {
+          const [obj] = newObjects.splice(idx, 1);
+          newObjects.unshift(obj);
+          break;
+        }
+        case 'forward': {
+          if (idx < newObjects.length - 1) {
+            [newObjects[idx], newObjects[idx + 1]] = [newObjects[idx + 1], newObjects[idx]];
+          }
+          break;
+        }
+        case 'backward': {
+          if (idx > 0) {
+            [newObjects[idx], newObjects[idx - 1]] = [newObjects[idx - 1], newObjects[idx]];
+          }
+          break;
+        }
+      }
+      return {
+        slides: state.slides.map(s => s.id !== slideId ? s : { ...s, objects: newObjects }),
+      };
+    });
   },
 
   // ── Presentation management ──
