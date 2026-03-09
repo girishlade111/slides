@@ -89,9 +89,10 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
   slides: stored?.slides ?? initialSlides,
   currentIndex: stored?.currentIndex ?? 0,
   selectedObjectId: null,
+  selectedObjectIds: [],
   clipboardSlide: null,
 
-  setCurrentIndex: (index) => set({ currentIndex: index, selectedObjectId: null }),
+  setCurrentIndex: (index) => set({ currentIndex: index, selectedObjectId: null, selectedObjectIds: [] }),
 
   goNext: () => {
     const { currentIndex, slides } = get();
