@@ -15,11 +15,6 @@ import { SaveAsDialog } from '@/components/dialogs/SaveAsDialog';
 import { NewPresentationDialog } from '@/components/dialogs/NewPresentationDialog';
 import { PresentationSettingsDialog } from '@/components/dialogs/PresentationSettingsDialog';
 import { useSlidesStore } from '@/store/useSlidesStore';
-import { OpenPresentationDialog } from '@/components/dialogs/OpenPresentationDialog';
-import { SaveAsDialog } from '@/components/dialogs/SaveAsDialog';
-import { NewPresentationDialog } from '@/components/dialogs/NewPresentationDialog';
-import { PresentationSettingsDialog } from '@/components/dialogs/PresentationSettingsDialog';
-import { useSlidesStore } from '@/store/useSlidesStore';
 import { saveToStorage } from '@/lib/storage';
 
 export default function Index() {
