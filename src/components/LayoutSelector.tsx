@@ -1,5 +1,4 @@
 import React from 'react';
-import { cn } from '@/lib/utils';
 import { useMasterSlideStore } from '@/store/masterSlideStore';
 import { usePresentationStore } from '@/store/presentationStore';
 import type { MasterLayout, MasterPlaceholder } from '@/store/masterSlideTypes';

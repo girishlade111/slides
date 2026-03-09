@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Plus, Trash2, Type, Image, Hash, AlignLeft, Download, Upload, Edit3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useMasterSlideStore } from '@/store/masterSlideStore';
-import type { MasterPlaceholder, MasterLayout } from '@/store/masterSlideTypes';
+import type { MasterPlaceholder } from '@/store/masterSlideTypes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
