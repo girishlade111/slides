@@ -178,6 +178,22 @@ export default function Index() {
             Themes
           </button>
           <button
+            onClick={() => setShowTransitions(true)}
+            className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md border border-border text-foreground hover:bg-muted transition-colors"
+            title="Slide Transitions"
+          >
+            <ArrowRightLeft className="w-3 h-3" />
+            Transitions
+          </button>
+          <button
+            onClick={() => setShowAnimations(true)}
+            className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md border border-border text-foreground hover:bg-muted transition-colors"
+            title="Object Animations"
+          >
+            <Sparkles className="w-3 h-3" />
+            Animations
+          </button>
+          <button
             onClick={() => setPresenting(true)}
             className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
