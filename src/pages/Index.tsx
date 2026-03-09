@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Check, Download, Loader2, Palette, Play, Plus, Sparkles, ArrowRightLeft, Monitor } from 'lucide-react';
+import { Check, Download, Loader2, Palette, Play, Plus, Sparkles, ArrowRightLeft, Monitor, Layers } from 'lucide-react';
 import { SlideEditor } from '@/components/SlideEditor';
 import { FileMenu } from '@/components/FileMenu';
 import { SlideSidebar } from '@/components/SlideSidebar';
@@ -20,6 +20,8 @@ import { SaveAsDialog } from '@/components/dialogs/SaveAsDialog';
 import { NewPresentationDialog } from '@/components/dialogs/NewPresentationDialog';
 import { PresentationSettingsDialog } from '@/components/dialogs/PresentationSettingsDialog';
 import { useSlidesStore } from '@/store/useSlidesStore';
+import { MasterSlideEditor } from '@/components/MasterSlideEditor';
+import { LayoutSelector } from '@/components/LayoutSelector';
 import { saveToStorage } from '@/lib/storage';
 import {
   DropdownMenu,
@@ -51,6 +53,7 @@ export default function Index() {
   const [showTransitions, setShowTransitions] = useState(false);
   const [showAnimations, setShowAnimations] = useState(false);
   const [showExport, setShowExport] = useState(false);
+  const [showMasterEditor, setShowMasterEditor] = useState(false);
 
   const selectedObj = selectedObjectId && currentSlide
     ? currentSlide.objects.find((o) => o.id === selectedObjectId)
@@ -218,7 +221,17 @@ export default function Index() {
             Export
           </button>
 
-          {/* Present button with dropdown */}
+          <button
+            onClick={() => setShowMasterEditor(true)}
+            className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md border border-border text-foreground hover:bg-muted transition-colors"
+            title="Master Slides"
+          >
+            <Layers className="w-3 h-3" />
+            Master Slides
+          </button>
+
+          {/* Layout selector */}
+          <LayoutSelector />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
@@ -308,6 +321,11 @@ export default function Index() {
       <TransitionsPanel open={showTransitions} onClose={() => setShowTransitions(false)} />
       <AnimationsPanel open={showAnimations} onClose={() => setShowAnimations(false)} />
       <ExportDialog open={showExport} onOpenChange={setShowExport} />
+
+      {/* Master Slide Editor */}
+      {showMasterEditor && (
+        <MasterSlideEditor onClose={() => setShowMasterEditor(false)} />
+      )}
     </div>
   );
 }

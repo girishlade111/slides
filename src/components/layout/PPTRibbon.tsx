@@ -14,8 +14,9 @@ import {
   PenTool, ArrowRight, Star, Hexagon,
   Upload, Film, BarChart3, PieChart,
   Sparkles, Zap, Clock, Eye,
-  Columns, SplitSquareHorizontal,
+  Columns, SplitSquareHorizontal, Layers,
 } from 'lucide-react';
+import { LayoutSelector } from '@/components/LayoutSelector';
 import { toast } from '@/hooks/use-toast';
 
 interface PPTRibbonProps {
@@ -29,6 +30,7 @@ interface PPTRibbonProps {
   onStartPresenterView?: () => void;
   onAddSlide?: () => void;
   isEditable?: boolean;
+  onToggleMasterEditor?: () => void;
 }
 
 const LADE_TEAL = 'hsl(174, 80%, 41%)';
@@ -46,6 +48,7 @@ export function PPTRibbon({
   onStartPresenterView,
   onAddSlide,
   isEditable = false,
+  onToggleMasterEditor,
 }: PPTRibbonProps) {
   const [activeTab, setActiveTab] = useState('Home');
 
@@ -82,7 +85,7 @@ export function PPTRibbon({
         )}
         {activeTab === 'Review' && <ReviewRibbon />}
         {activeTab === 'View' && (
-          <ViewRibbon showGrid={showGrid} onToggleGrid={onToggleGrid} showNotes={showNotes} onToggleNotes={onToggleNotes} isDarkMode={isDarkMode} onToggleDarkMode={onToggleDarkMode} />
+          <ViewRibbon showGrid={showGrid} onToggleGrid={onToggleGrid} showNotes={showNotes} onToggleNotes={onToggleNotes} isDarkMode={isDarkMode} onToggleDarkMode={onToggleDarkMode} onToggleMasterEditor={onToggleMasterEditor} />
         )}
         {activeTab === 'File' && <FileRibbon />}
       </div>
@@ -204,11 +207,7 @@ function HomeRibbon({ onAddSlide, isEditable }: { onAddSlide?: () => void; isEdi
             <LayoutGrid className="w-4 h-4 text-[#20B2AA]" strokeWidth={1.5} />
             New Slide
           </button>
-          <button className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md hover:bg-[#f0f0f0] text-[11px] text-[#444] font-medium">
-            <SplitSquareHorizontal className="w-4 h-4" strokeWidth={1.5} />
-            Layout
-            <ChevronDown className="w-3 h-3 text-[#999]" />
-          </button>
+          <LayoutSelector />
         </div>
       </RibbonGroup>
 
@@ -473,8 +472,8 @@ function ReviewRibbon() {
   );
 }
 
-function ViewRibbon({ showGrid, onToggleGrid, showNotes, onToggleNotes, isDarkMode, onToggleDarkMode }: {
-  showGrid: boolean; onToggleGrid: () => void; showNotes?: boolean; onToggleNotes?: () => void; isDarkMode?: boolean; onToggleDarkMode?: () => void;
+function ViewRibbon({ showGrid, onToggleGrid, showNotes, onToggleNotes, isDarkMode, onToggleDarkMode, onToggleMasterEditor }: {
+  showGrid: boolean; onToggleGrid: () => void; showNotes?: boolean; onToggleNotes?: () => void; isDarkMode?: boolean; onToggleDarkMode?: () => void; onToggleMasterEditor?: () => void;
 }) {
   return (
     <>
@@ -482,6 +481,9 @@ function ViewRibbon({ showGrid, onToggleGrid, showNotes, onToggleNotes, isDarkMo
         <RibbonButton icon={LayoutGrid} label="Normal" large active={!showGrid} accent />
         <RibbonButton icon={Grid3X3} label="Slide Sorter" large onClick={onToggleGrid} active={showGrid} />
         <RibbonButton icon={Eye} label="Reading View" large />
+      </RibbonGroup>
+      <RibbonGroup label="Master Views">
+        <RibbonButton icon={Layers} label="Master Slides" large accent onClick={onToggleMasterEditor} />
       </RibbonGroup>
       <RibbonGroup label="Show">
         <div className="flex flex-col gap-1.5">
