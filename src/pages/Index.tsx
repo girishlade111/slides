@@ -256,6 +256,8 @@ export default function Index() {
       <PresentationSettingsDialog open={showSettings} onOpenChange={setShowSettings} />
       <SlideBackgroundEditor open={showBgEditor} onClose={() => setShowBgEditor(false)} />
       <ThemesPanel open={showThemes} onClose={() => setShowThemes(false)} />
+      <TransitionsPanel open={showTransitions} onClose={() => setShowTransitions(false)} />
+      <AnimationsPanel open={showAnimations} onClose={() => setShowAnimations(false)} />
     </div>
   );
 }
