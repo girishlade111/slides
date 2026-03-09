@@ -75,6 +75,21 @@ export default function Index() {
         if (e.key === 'r') { e.preventDefault(); updateObjectStyle(slideId, obj.id, { align: 'right' }); return; }
       }
 
+      // Alignment shortcuts (Ctrl+Shift+key)
+      if (mod && e.shiftKey && currentSlide) {
+        const ids = selectedObjectIds.length > 0 ? selectedObjectIds : selectedObjectId ? [selectedObjectId] : [];
+        const store = useSlidesStore.getState();
+        const sId = currentSlide.id;
+        if (e.key === 'L' || e.key === 'l') { e.preventDefault(); store.alignObjects(sId, ids, 'left'); return; }
+        if (e.key === 'E' || e.key === 'e') { e.preventDefault(); store.alignObjects(sId, ids, 'center-h'); return; }
+        if (e.key === 'R' || e.key === 'r') { e.preventDefault(); store.alignObjects(sId, ids, 'right'); return; }
+        if (e.key === 'T' || e.key === 't') { e.preventDefault(); store.alignObjects(sId, ids, 'top'); return; }
+        if (e.key === 'M' || e.key === 'm') { e.preventDefault(); store.alignObjects(sId, ids, 'center-v'); return; }
+        if (e.key === 'B' || e.key === 'b') { e.preventDefault(); store.alignObjects(sId, ids, 'bottom'); return; }
+        if (e.key === ']') { e.preventDefault(); ids.forEach(id => store.reorderObject(sId, id, 'forward')); return; }
+        if (e.key === '[') { e.preventDefault(); ids.forEach(id => store.reorderObject(sId, id, 'backward')); return; }
+      }
+
       // Delete selected object
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedObjectId && currentSlide) {
         e.preventDefault();
@@ -87,7 +102,7 @@ export default function Index() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [goNext, goPrev, presenting, saveCurrent, isTextSelected, selectedObj, currentSlide, selectedObjectId, updateObjectStyle]);
+  }, [goNext, goPrev, presenting, saveCurrent, isTextSelected, selectedObj, currentSlide, selectedObjectId, selectedObjectIds, updateObjectStyle]);
 
   const handleExportPng = useCallback(() => {
     const stage = canvasRef.current?.getStage();
