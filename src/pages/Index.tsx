@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Check, Loader2, Play, Plus } from 'lucide-react';
+import { Check, Loader2, Palette, Play, Plus } from 'lucide-react';
 import { SlideEditor } from '@/components/SlideEditor';
 import { FileMenu } from '@/components/FileMenu';
 import { SlideSidebar } from '@/components/SlideSidebar';
@@ -8,6 +8,7 @@ import { ImageMenu } from '@/components/ImageMenu';
 import { TextFormattingToolbar } from '@/components/TextFormattingToolbar';
 import { SlideBackgroundEditor } from '@/components/SlideBackgroundEditor';
 import { AlignmentToolbar } from '@/components/AlignmentToolbar';
+import { ThemesPanel } from '@/components/ThemesPanel';
 import { KonvaSlideCanvas, type KonvaSlideCanvasHandle } from '@/components/slides/KonvaSlideCanvas';
 import { PresentationOverlay } from '@/components/slides/PresentationOverlay';
 import { OpenPresentationDialog } from '@/components/dialogs/OpenPresentationDialog';
@@ -36,6 +37,7 @@ export default function Index() {
   const [showSaveAs, setShowSaveAs] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showBgEditor, setShowBgEditor] = useState(false);
+  const [showThemes, setShowThemes] = useState(false);
 
   const selectedObj = selectedObjectId && currentSlide
     ? currentSlide.objects.find((o) => o.id === selectedObjectId)
@@ -164,6 +166,14 @@ export default function Index() {
             Background
           </button>
           <button
+            onClick={() => setShowThemes(true)}
+            className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md border border-border text-foreground hover:bg-muted transition-colors"
+            title="Themes"
+          >
+            <Palette className="w-3 h-3" />
+            Themes
+          </button>
+          <button
             onClick={() => setPresenting(true)}
             className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
@@ -225,6 +235,7 @@ export default function Index() {
       <SaveAsDialog open={showSaveAs} onOpenChange={setShowSaveAs} />
       <PresentationSettingsDialog open={showSettings} onOpenChange={setShowSettings} />
       <SlideBackgroundEditor open={showBgEditor} onClose={() => setShowBgEditor(false)} />
+      <ThemesPanel open={showThemes} onClose={() => setShowThemes(false)} />
     </div>
   );
 }
