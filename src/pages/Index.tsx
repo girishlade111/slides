@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Check, Loader2, Palette, Play, Plus, Sparkles, ArrowRightLeft } from 'lucide-react';
+import { Check, Download, Loader2, Palette, Play, Plus, Sparkles, ArrowRightLeft } from 'lucide-react';
 import { SlideEditor } from '@/components/SlideEditor';
 import { FileMenu } from '@/components/FileMenu';
 import { SlideSidebar } from '@/components/SlideSidebar';
@@ -11,6 +11,7 @@ import { AlignmentToolbar } from '@/components/AlignmentToolbar';
 import { ThemesPanel } from '@/components/ThemesPanel';
 import { TransitionsPanel } from '@/components/TransitionsPanel';
 import { AnimationsPanel } from '@/components/AnimationsPanel';
+import { ExportDialog } from '@/components/ExportDialog';
 import { KonvaSlideCanvas, type KonvaSlideCanvasHandle } from '@/components/slides/KonvaSlideCanvas';
 import { PresentationOverlay } from '@/components/slides/PresentationOverlay';
 import { OpenPresentationDialog } from '@/components/dialogs/OpenPresentationDialog';
@@ -42,6 +43,7 @@ export default function Index() {
   const [showThemes, setShowThemes] = useState(false);
   const [showTransitions, setShowTransitions] = useState(false);
   const [showAnimations, setShowAnimations] = useState(false);
+  const [showExport, setShowExport] = useState(false);
 
   const selectedObj = selectedObjectId && currentSlide
     ? currentSlide.objects.find((o) => o.id === selectedObjectId)
@@ -194,6 +196,14 @@ export default function Index() {
             Animations
           </button>
           <button
+            onClick={() => setShowExport(true)}
+            className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md border border-border text-foreground hover:bg-muted transition-colors"
+            title="Export Presentation"
+          >
+            <Download className="w-3 h-3" />
+            Export
+          </button>
+          <button
             onClick={() => setPresenting(true)}
             className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
@@ -258,6 +268,7 @@ export default function Index() {
       <ThemesPanel open={showThemes} onClose={() => setShowThemes(false)} />
       <TransitionsPanel open={showTransitions} onClose={() => setShowTransitions(false)} />
       <AnimationsPanel open={showAnimations} onClose={() => setShowAnimations(false)} />
+      <ExportDialog open={showExport} onOpenChange={setShowExport} />
     </div>
   );
 }
