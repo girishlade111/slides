@@ -19,7 +19,7 @@ import { saveToStorage } from '@/lib/storage';
 
 export default function Index() {
   const {
-    slides, currentIndex, presentationMeta, selectedObjectId,
+    slides, currentIndex, presentationMeta, selectedObjectId, selectedObjectIds,
     goNext, goPrev, saveCurrent, addTextBox, updateObjectStyle,
   } = useSlidesStore();
 
