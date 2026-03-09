@@ -48,6 +48,7 @@ export function PPTRibbon({
   onStartPresenterView,
   onAddSlide,
   isEditable = false,
+  onToggleMasterEditor,
 }: PPTRibbonProps) {
   const [activeTab, setActiveTab] = useState('Home');
 
