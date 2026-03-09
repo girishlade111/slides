@@ -96,15 +96,27 @@ export const useSlidesStore = create<SlidesState>((set, get) => ({
 
   goNext: () => {
     const { currentIndex, slides } = get();
-    if (currentIndex < slides.length - 1) set({ currentIndex: currentIndex + 1, selectedObjectId: null });
+    if (currentIndex < slides.length - 1) set({ currentIndex: currentIndex + 1, selectedObjectId: null, selectedObjectIds: [] });
   },
 
   goPrev: () => {
     const { currentIndex } = get();
-    if (currentIndex > 0) set({ currentIndex: currentIndex - 1, selectedObjectId: null });
+    if (currentIndex > 0) set({ currentIndex: currentIndex - 1, selectedObjectId: null, selectedObjectIds: [] });
   },
 
-  setSelectedObjectId: (id) => set({ selectedObjectId: id }),
+  setSelectedObjectId: (id) => set({ selectedObjectId: id, selectedObjectIds: id ? [id] : [] }),
+  
+  toggleObjectSelection: (id) => {
+    const { selectedObjectIds } = get();
+    const newIds = selectedObjectIds.includes(id)
+      ? selectedObjectIds.filter(i => i !== id)
+      : [...selectedObjectIds, id];
+    set({ selectedObjectIds: newIds, selectedObjectId: newIds.length === 1 ? newIds[0] : newIds.length > 0 ? newIds[0] : null });
+  },
+
+  selectMultipleObjects: (ids) => set({ selectedObjectIds: ids, selectedObjectId: ids.length > 0 ? ids[0] : null }),
+  clearSelection: () => set({ selectedObjectId: null, selectedObjectIds: [] }),
+
   setSlides: (slides) => set({ slides }),
 
   updateSlideName: (slideId, name) => {
