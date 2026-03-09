@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Play, Trash2, GripVertical } from 'lucide-react';
+import { X, Trash2, GripVertical } from 'lucide-react';
 import {
   ENTRANCE_EFFECTS, EMPHASIS_EFFECTS, EXIT_EFFECTS,
   EASING_OPTIONS, createObjectAnimation,

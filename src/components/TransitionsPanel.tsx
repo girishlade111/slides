@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { X, Play } from 'lucide-react';
-import { TRANSITION_OPTIONS, EASING_OPTIONS, DEFAULT_TRANSITION, type SlideTransition, type TransitionType, type EasingType } from '@/data/animations';
+import { TRANSITION_OPTIONS, EASING_OPTIONS, DEFAULT_TRANSITION, type SlideTransition, type EasingType } from '@/data/animations';
 import { useSlidesStore } from '@/store/useSlidesStore';
 import { Slider } from '@/components/ui/slider';
 

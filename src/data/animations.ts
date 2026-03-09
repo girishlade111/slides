@@ -161,7 +161,7 @@ export function getTransitionStyles(
   };
 
   if (slideMap[transition.type]) {
-    const [enterFrom, exitTo] = slideMap[transition.type];
+    const [, exitTo] = slideMap[transition.type];
     if (phase === 'enter') return { ...base, transform: 'translate(0,0)' };
     return { ...base, transform: `translate(${exitTo})` };
   }

@@ -108,11 +108,17 @@ export interface SlideBackground {
   };
 }
 
+export interface SlideAnimations {
+  [objectId: string]: ObjectAnimation[];
+}
+
 export interface SlideData {
   id: string;
   name: string;
   objects: SlideObject[];
   background?: SlideBackground;
+  transition?: SlideTransition;
+  animations?: SlideAnimations;
 }
 
 export function getSlideName(slide: SlideData): string {
