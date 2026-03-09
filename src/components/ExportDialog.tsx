@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Download, FileText, FileImage, FileCode, Monitor, X, Loader2, Check,
+  Download, FileText, FileImage, FileCode, Monitor, Loader2, Check,
 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
