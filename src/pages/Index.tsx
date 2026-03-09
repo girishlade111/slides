@@ -321,6 +321,11 @@ export default function Index() {
       <TransitionsPanel open={showTransitions} onClose={() => setShowTransitions(false)} />
       <AnimationsPanel open={showAnimations} onClose={() => setShowAnimations(false)} />
       <ExportDialog open={showExport} onOpenChange={setShowExport} />
+
+      {/* Master Slide Editor */}
+      {showMasterEditor && (
+        <MasterSlideEditor onClose={() => setShowMasterEditor(false)} />
+      )}
     </div>
   );
 }
