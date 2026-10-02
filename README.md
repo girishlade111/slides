@@ -1,73 +1,92 @@
-# Welcome to your Lovable project
+# Lade Slides — Presentation Editor
 
-## Project info
+A fully client-side slide presentation editor built with **Vite**, **React 18**, **TypeScript**, **Tailwind CSS** and **shadcn/ui**. Create, edit and export beautiful slide decks right in the browser — no account needed, no server round-trips.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Features
 
-## How can I edit this code?
+- **Visual slide editor** — canvas-based editing powered by react-konva (drag, resize, align shapes and text)
+- **Slide management** — slide list, thumbnails, reordering, duplicate/delete slides
+- **Themes & backgrounds** — built-in theme gallery, theme editor, slide background editor
+- **Master slide system** — master slides, master-slide editor, reusable layouts
+- **Media** — image insertion, image properties panel
+- **Animations & transitions** — animation panel and slide transition panel
+- **Presenter tools** — presenter view with speaker notes (synced via Supabase) and an audience window
+- **Export** — export decks to **PPTX** (pptxgenjs), **PDF** (jsPDF), and ZIP (jszip); html2canvas snapshots
+- **UI** — full shadcn/ui component set, dark-mode ready (next-themes), toast notifications (sonner)
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+| Layer      | Tech                                                                 |
+|------------|----------------------------------------------------------------------|
+| Framework  | React 18, TypeScript, Vite 5                                         |
+| Styling    | Tailwind CSS 3, shadcn/ui (Radix primitives), tailwindcss-animate     |
+| Canvas     | react-konva, Konva, @react-three/fiber (3D extras)                   |
+| State      | Zustand, TanStack React Query                                        |
+| Forms      | react-hook-form + zod                                                |
+| Notes sync | Supabase (optional — notes persistence only)                          |
+| Charts     | Recharts, embla-carousel, react-day-picker                           |
+| Export     | pptxgenjs, jsPDF, html2canvas, jszip, file-saver                      |
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+## Quick Start
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# 1. Install dependencies
+npm install --legacy-peer-deps
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# 2. (Optional) presenter-notes sync via Supabase — copy and fill in
+cp .env.example .env   # VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# 3. Run the dev server
 npm run dev
+
+# 4. Production build (served from /slides/ on GitHub Pages)
+npm run build
 ```
 
-**Edit a file directly in GitHub**
+Node.js 18+ recommended. Uses npm (a `package-lock.json` ships with the repo; `bun.lockb` is also present from the original Lovable scaffold).
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Project Structure
 
-**Use GitHub Codespaces**
+```
+src/
+├── App.tsx                 # router + providers
+├── main.tsx                # entry
+├── pages/                  # Index (editor), AudienceWindow, NotFound
+├── components/
+│   ├── slides/             # SlideEditor, SlideList, SlideView, PresenterView, ...
+│   ├── ui/                 # shadcn/ui primitives
+│   └── dialogs/            # ExportDialog, FileMenu, ...
+├── slides/                 # demo + showcase decks
+├── store/                  # zustand stores
+├── hooks/                  # editor hooks (incl. usePresenterNotes)
+├── integrations/supabase/  # Supabase client (presenter notes only)
+├── lib/, data/, types/, assets/
+public/                     # favicon, robots.txt
+supabase/                   # migrations + edge functions (optional backend)
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Environment Variables
 
-## What technologies are used for this project?
+| Variable                        | Required | Purpose                                    |
+|---------------------------------|----------|--------------------------------------------|
+| `VITE_SUPABASE_URL`             | No       | Supabase project URL — presenter notes sync |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | No       | Supabase anon key — presenter notes sync    |
 
-This project is built with:
+Without these, the editor works fully locally; only presenter-note persistence is disabled.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Deploy Notes
 
-## How can I deploy this project?
+- Fully static — deploys anywhere (GitHub Pages, Cloudflare Pages, Netlify).
+- GitHub Pages project site: build with base `/slides/` so asset URLs resolve:
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+  ```sh
+  npx vite build --base=/slides/
+  ```
 
-## Can I connect a custom domain to my Lovable project?
+  Publish the `dist/` output (e.g. to a `docs/` folder on `main` with a `.nojekyll` file and a `404.html` copy for client-side routing).
+- The app uses `BrowserRouter`; on static hosts, copy `index.html` to `404.html` so deep routes still load.
+- Deployment status: **live on GitHub Pages** — https://girishlade111.github.io/slides/
 
-Yes, you can!
+## Built by
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Built by [Girish Lade](https://ladestack.in) — part of the [LadeStack](https://ladestack.in) open-source portfolio.
